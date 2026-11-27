@@ -5420,6 +5420,52 @@ ft10_assert() {
   fi
 }
 
+# ── FT11 — the readers of a written profile cite where the former-label reading is decided (ADR-053
+# Decision 3). Each home below is a reader the written-profile test selects, or the section that decides
+# the reading, and each must carry its phrases, read through ft_region so a line wrap cannot hide one.
+# The homes are the test's verdicts, written here with their reason; they are not a list the rule rests
+# on, because a new verb of /trip-record is bound by standing rule 19 with no edit to this arm.
+#   standing    skills/trip-record/SKILL.md § Standing clause — rule 19 binds every verb       C S
+#   promote     its `## promote` section — a field named by key, label or former label        C S M K
+#   reconciler  agents/00-enrichment.md § Where the source files come from — the composed read C S M
+#   ideation    agents/destination-ideation.md § Inputs — the leanings it reads                C
+#   decided     reference/data-model.md § Former labels — the sentence the homes reach O3 by   S M O
+# C cites § Former labels · S states the single-valued condition over a field's spellings ·
+# M names MALFORMED-SLOT · K names a field by its key, its current label or a former label · O cites O3
+FT11_C='`reference/data-model.md` § *Former labels*'
+FT11_S='under more than one of its spellings'
+FT11_M='MALFORMED-SLOT'
+FT11_K="a field's key, its current label or one of its former labels"
+FT11_O='§ *Determinism* **O3**'
+ft11_homes() {   # ft11_homes <skill> <enrichment> <ideation> <data-model> — home<TAB>file<TAB>heading<TAB>letters
+  printf 'standing\t%s\t%s\tCS\n' "$1" '## Standing clause'
+  printf 'promote\t%s\t%s\tCSMK\n' "$1" '## promote '
+  printf 'reconciler\t%s\t%s\tCSM\n' "$2" '### Where the source files come from'
+  printf 'ideation\t%s\t%s\tC\n' "$3" '## Inputs'
+  printf 'decided\t%s\t%s\tSMO\n' "$4" '### Former labels'
+}
+ft11_phrase() { case "$1" in C) printf '%s' "$FT11_C" ;; S) printf '%s' "$FT11_S" ;; M) printf '%s' "$FT11_M" ;; K) printf '%s' "$FT11_K" ;; O) printf '%s' "$FT11_O" ;; esac; }
+ft11_assert() {   # ft11_assert <skill> <enrichment> <ideation> <data-model> — one verdict
+  local h f hd want rg empty="" miss="" n=0 i l
+  while IFS="$(printf '\t')" read -r h f hd want; do
+    [ -n "$h" ] || continue
+    n=$((n + 1))
+    rg="$(ft_region "$f" "$hd" 2>/dev/null)"
+    if [ "${#rg}" -lt 2 ]; then empty="$empty $h"; continue; fi
+    for ((i = 0; i < ${#want}; i++)); do
+      l="${want:i:1}"
+      grep -qF -- "$(ft11_phrase "$l")" <<<"$rg" || miss="$miss $h:$l"
+    done
+  done <<<"$(ft11_homes "$@")"
+  if [ "$n" -eq 0 ] || [ -n "$empty" ]; then
+    FAIL "FT11: a home's region came back EMPTY:${empty:- no home was read} — a missing citation would read as a failed parse, and a present one could not be seen"
+  elif [ -n "$miss" ]; then
+    FAIL "FT11: a reader of a written profile does not state where its former-label reading is decided — each home:letter missing:$miss (C '$FT11_C', S '$FT11_S', M '$FT11_M', K \"$FT11_K\", O '$FT11_O')"
+  else
+    PASS "FT11: all $n home(s) state the reading — standing rule 19 and the reconciler cite § Former labels and its single-valued sentence, the promote section names a field by its key, its current label or a former label and refuses a slot field answered under more than one spelling, destination ideation cites the section, and the section itself carries the sentence the others reach O3 through. CTL-FT11-STRIP shows each home failing alone with its phrase stripped"
+  fi
+}
+
 # ── The key-addressed table writer, and the shared copy a criterion-4 arm reads (#2211 criterion 4).
 #
 # ft_row_set <data-model> <key> <column> <value> — in place, the ONE row of the classification table
@@ -5590,6 +5636,9 @@ ft_route_assert "$FT_DOC" "$FT_FORMS"
 ft_keycol_assert "$FT_DOC"
 ft_former_assert "$FT_DOC"
 ft10_assert "$FT_DOC" "$ROOT"
+FT_ENRICH="$ROOT/agents/00-enrichment.md"
+FT_IDEATE="$ROOT/agents/destination-ideation.md"
+ft11_assert "$FT_SKILL" "$FT_ENRICH" "$FT_IDEATE" "$FT_DOC"
 
 # ── The controls. Each mutates a COPY under $WORK, asserts the mutation LANDED, and compares the
 # copy's report with this run's LIVE report as a delta, so replaying a mutation on the tracked
@@ -6182,6 +6231,41 @@ if [ "$FT_OK" -eq 1 ]; then
   else
     FAIL "CTL-FT10-LIVE: MUST FIRE — would-love's label read '${FT10_WL:-<none>}', the reword landed=$FT10_LL, and FT10 over the tracked population read '$ft10_got' where one FAIL naming at least one pointer-shaped mention is owed"
   fi
+
+  # ── FT11's controls, CTL-FT11-STRIP[<home>]. Each strips one home's phrase from a copy of its file —
+  # every occurrence inside that home's region, and nowhere else — asserts the strip LANDED, and reads
+  # FT11 with the copy in that home's place: one FAIL, naming that home and no other.
+  ft11_strip() {   # ft11_strip <file> <heading> <phrase> <out> — 1 when no occurrence was stripped
+    LIT_H="$2" LIT_P="$3" LC_ALL=C awk 'BEGIN { h = ENVIRON["LIT_H"]; p = ENVIRON["LIT_P"]; lv = h; sub(/ .*/, "", lv) }
+      on && match($0, /^#+ /) && RLENGTH - 1 <= length(lv) { on = 0; past = 1 }
+      !on && !past && index($0, h) == 1 { on = 1; print; next }
+      on { while ((i = index($0, p)) > 0) { $0 = substr($0, 1, i - 1) substr($0, i + length(p)); n++ } }
+      { print }
+      END { exit !n }' "$1" > "$4"
+  }
+  for ft11_h in standing promote reconciler ideation decided; do
+    ft11_s="$FT_SKILL"; ft11_e="$FT_ENRICH"; ft11_i="$FT_IDEATE"; ft11_d="$FT_DOC"; ft11_l=C
+    case "$ft11_h" in
+      standing)   ft11_f="$FT_SKILL";  ft11_hd='## Standing clause' ;;
+      promote)    ft11_f="$FT_SKILL";  ft11_hd='## promote ' ;;
+      reconciler) ft11_f="$FT_ENRICH"; ft11_hd='### Where the source files come from' ;;
+      ideation)   ft11_f="$FT_IDEATE"; ft11_hd='## Inputs' ;;
+      decided)    ft11_f="$FT_DOC";    ft11_hd='### Former labels'; ft11_l=S ;;
+    esac
+    ft11_x="$WORK/ft/ft11-$ft11_h.md"; ft11_ld=0
+    ft11_strip "$ft11_f" "$ft11_hd" "$(ft11_phrase "$ft11_l")" "$ft11_x" && ! cmp -s "$ft11_f" "$ft11_x" && ft11_ld=1
+    case "$ft11_h" in
+      standing|promote) ft11_s="$ft11_x" ;; reconciler) ft11_e="$ft11_x" ;; ideation) ft11_i="$ft11_x" ;; decided) ft11_d="$ft11_x" ;;
+    esac
+    ft11_out="$(ft_capture ft11_assert "$ft11_s" "$ft11_e" "$ft11_i" "$ft11_d")"
+    ft11_v="$(awk -F'\t' '/^[PFV]\t/ { n++; v = $1 } END { printf "%d %s", n + 0, (n == 1) ? v : "-" }' <<<"$ft11_out")"
+    ft11_named="$(grep -o -E ' (standing|promote|reconciler|ideation|decided):[CSMKO]' <<<"$ft11_out" | sort -u | tr -d ' ' | tr '\n' ' ')"
+    if [ "$ft11_ld" -eq 1 ] && [ "$ft11_v" = "1 F" ] && [ "$ft11_named" = "$ft11_h:$ft11_l " ]; then
+      PASS "CTL-FT11-STRIP[$ft11_h]: MUST FIRE — with the home's '$(ft11_phrase "$ft11_l")' stripped from a copy, FT11 reads one FAIL naming $ft11_h:$ft11_l and no other home"
+    else
+      FAIL "CTL-FT11-STRIP[$ft11_h]: MUST FIRE — the strip landed=$ft11_ld, and FT11 read '$ft11_v' (verdicts, verdict) naming '${ft11_named:-nothing}' where one FAIL naming $ft11_h:$ft11_l alone is owed"
+    fi
+  done
 fi
 
 if [ "$FT_RAN" -ne 1 ]; then
