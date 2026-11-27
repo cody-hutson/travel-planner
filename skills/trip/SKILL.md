@@ -1225,7 +1225,8 @@ verb reaches `Write` for its own output rather than for an agent's.
 **Non-interactive: the standing clause's *run nobody can answer*.**
 
 **A build ends with its own page the newest.** Every reader takes the newest
-`*-travel-site.html` — the walk, `publish`, `update` and `rotate`, and both freshness relations — and a patch
+`*-travel-site.html` — the walk, `publish`, `update` and `rotate`, `itinerary-to-build` and
+`/trip-publish list`'s `build-to-published` — and a patch
 with nothing to change writes nothing. So after any build, and before the completeness check below
 runs, list `trips/<slug>/outputs/*-travel-site.html` newest first, `Bash(ls:*)` with `-1t`; where
 `<page>` is not the first line, run `touch -c` on `<page>` alone, quoted as that listing printed it.
