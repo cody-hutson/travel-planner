@@ -8841,19 +8841,19 @@ ST_CF_MD_V2="$(while IFS= read -r st_cf_m; do [ -n "$st_cf_m" ] && [ "$(st_cf_ve
 # rules and never a measurement of the form. The lifecycle row's zero IS measured, by the probe that
 # counts the lines of the form opening on its bold label.
 #
-# ADR-028 (Accepted) rewrites the `[DERIVED]` row twice, and each change moves the realized vector
-# there, so each updates this pin in the same change. Its Retire landing set came first: landing
+# ADR-028 (Accepted) rewrote the `[DERIVED]` row twice, and each change moved the realized vector
+# there, so each updated this pin in the same change. Its Retire landing set came first: landing
 # after the Cutover set that first emitted the traveller-presence file, it removed the
 # per-traveller half of the row together with its block, so the row's Block text names the trip
-# window alone. The change that names `/trip-record` for `### Effective Planning Days` — that
-# record's Decision 1 row — comes second: it gives the trip window a row whose region realizes
-# NO (marked), and updates this pin in the same change.
+# window alone. The change that named `/trip-record` for `### Effective Planning Days` — that
+# record's Decision 1 row — came second: it gave the trip window a row whose region realizes
+# NO (marked), and updated this pin in the same change.
 #
 # One line per row: `<form tag> | <Block cell, verbatim> | <realized verdict>`.
 ST_CF_PIN='trip-context | Title line · `## Group` roster · `Total travelers` | CONDITIONAL (condition)
 trip-context | `## Mode` → `Current mode` and `Mode notes` | NO (writer-set)
 trip-context | `[ENRICH]` fields — `### Transit Access`, `### Walkable Proximity`, `## Weather Context`, `## Destination Baseline`, `## Events & Calendar` | NO (marked)
-trip-context | `[DERIVED]` block — `### Effective Planning Days` | EXCLUDED (no-writer)
+trip-context | `[DERIVED]` — `### Effective Planning Days` | NO (marked)
 trip-context | `## Destination` | YES (interviewer)
 trip-context | `## Locked Elements` · `## Current Itinerary Status` | YES (interviewer)
 trip-context | `**Lifecycle:**` — the lifecycle marker line | UNREACHABLE (by construction)
@@ -9126,8 +9126,11 @@ ST_CF_FX="$(st_cf_fixture sens-v2)"; [ -n "$ST_CF_SR" ] && st_cf_dup_range "$ST_
 st_cf_mustnotfire "CTL-ST-CF-SENS-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 1 "the first sub-region of level 3 or deeper that is interviewable and holds a field is duplicated in place (lines ${ST_CF_SR:-none}) — a repeated block, as the form invites its filler to add, resolves as its twin does"
 # CTL-ST-CF-CONDITION-CELL — MUST NOT FIRE, the specificity of the class reader. On a COPY of the
 # charter, the agent contract span leaves the Condition cell of the first AGENT row and is written into
-# the Condition cell of the first addressed row naming no writer. A class read from the Writer and Block
-# cells alone does not move, and neither does any realized verdict.
+# the Condition cell of the first row naming no writer. A class read from the Writer and Block
+# cells alone does not move, and neither does any realized verdict. Since the trip window's row names
+# /trip-record, that row is row 9, a block not listed above, which no region reaches: the class
+# vector discriminates there, and the verdict and projection limbs hold by construction. A reader that
+# moved a verdict through a Condition cell would move the row's class first, which the vector sees.
 ST_CF_AR="$(awk -F'\t' '$1 == "ROW" && $3 == "AGENT" { print $2; exit }' <<<"$ST_CF_RG")"
 ST_CF_NR="$(awk -F'\t' '$1 == "ROW" && $3 == "NONE" { print $2; exit }' <<<"$ST_CF_RG")"
 ST_CF_AS="$(awk -F'\t' -v r="$ST_CF_AR" '$1 == "ROW" && $2 == r { if (match($9, /`agents\/[^`]+\.md`/)) print substr($9, RSTART, RLENGTH); exit }' <<<"$ST_CF_RG")"

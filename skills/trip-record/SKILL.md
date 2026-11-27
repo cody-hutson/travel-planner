@@ -1896,7 +1896,7 @@ before it (§ *Removing a row*).
 
 ## fact <statement>
 
-**Reads:** `trips/<slug>/trip-context.md` — the one block the statement routes to, read before it is written because standing rule 4 tests a placeholder by value and so separates a fill from a replacement, because an outgoing value is echoed verbatim before it is replaced, and because a new repeat unit is appended under the units already in that block without renumbering or rewriting them. Reads no other block of that file. Reads `outputs/event-status.md` not at all — that file is `/trip-record event`'s, and reading it here would give `## Locked Elements` a second source it does not write. Dispatches no agent. **Non-interactive: the standing clause's *run nobody can answer*.**
+**Reads:** `trips/<slug>/trip-context.md` — the one block the statement routes to, read before it is written because standing rule 4 tests a placeholder by value and so separates a fill from a replacement, because an outgoing value is echoed verbatim before it is replaced, and because a new repeat unit is appended under the units already in that block without renumbering or rewriting them. Where the statement records a declared input of `### Effective Planning Days`, it also reads, for the echo and the derivation standing rule 20 names, that block, the blocks holding its inputs — the anchor `### Outbound` and `### Return` legs and `## Accommodation` — and `templates/trip-context.template.md` § *Effective Planning Days [DERIVED]*, resolved against the engine root, because that rule recomputes the lines the input feeds and echoes each line it replaces. Reads no other block of that file. Reads `outputs/event-status.md` not at all — that file is `/trip-record event`'s, and reading it here would give `## Locked Elements` a second source it does not write. Dispatches no agent. **Non-interactive: the standing clause's *run nobody can answer*.**
 
 **The default-row verb.** § *Write ownership*'s default row assigns every untagged field not named
 on another row to this command; inside this command those fields are this verb's, except the ones
@@ -1922,7 +1922,7 @@ verb's.
 | Block class | Route |
 |---|---|
 | `[ENRICH]`-tagged | the enrichment agent's (`agents/00-enrichment.md`). Name it and write nothing — this verb writes no `[ENRICH]` field |
-| `[DERIVED]` | **no writer exists.** Report staleness and **name no command**; this verb writes zero bytes of such a block |
+| `[DERIVED]` | **this verb's under standing rule 20 alone, never as a route.** A statement about the block's own values is recorded as the input it derives from, and the lines that input feeds are recomputed in the same act, each echoed outgoing then incoming |
 | `**Lifecycle:**` | `/trip-decommission`'s — name it and stop. An absent line is the contract's declared default rather than a gap to fill. This verb never writes it |
 | `## Destination`, `## Mode` and `## Group` | a sibling verb of this same command — name it and stop |
 | `## Locked Elements`, `## Current Itinerary Status`, and every other untagged field | **this verb writes it** |
@@ -1938,7 +1938,8 @@ than one: ask once, naming them.** **None: say that no block of `trip-context.md
 statement, name none, and stop** — the ask has no candidates to offer, and this verb may not create
 the block that would be the answer, so the refusal *is* the terminal disposition rather than a
 question with nothing in it. This verb never collapses the two. **Never write to more than one
-block** to be safe. And **never create a new `##`
+block** to be safe; standing rule 20's recompute of `### Effective Planning Days`, in the act that
+records one of its inputs, is that rule's write and not a second route. And **never create a new `##`
 block** — § *Write ownership* assigns a block it does not list to nobody, and requires that *a new
 block gets an owner in this table before it gets content*, so a command that created blocks would
 make that table a description of the past. Adding a `### [Constraint Name]` block under `## Hard
@@ -1951,7 +1952,8 @@ block.
 - **A bracketed placeholder becoming a value is a fill**, not a replacement — the placeholder is the
   form, not content. Write it.
 - **A value becoming a different value is a replacement.** **Echo the outgoing value verbatim before
-  writing**, and change only that field's lines.
+  writing**, and change only that field's lines — where the field is a declared input of
+  `### Effective Planning Days`, standing rule 20's recompute of the lines it feeds is that rule's write.
 - **A new unit is appended**, which is the shape **standing rule 7** admits and the tool it names,
   under the block's own repeat unit — a `### [Constraint Name]` block
   under `## Hard Constraints`, a `#### Origin <letter>` block under `### Additional origins`, a row
@@ -1988,7 +1990,7 @@ Elements` once, at setup, to seed initial `locked` rows. Say that; do not act on
 | What was recorded | What this verb names |
 |---|---|
 | a booked transport or lodging anchor — a confirmation code, a flight leg, an accommodation booking status | **`/trip-record mode ENRICHMENT`**, and it does not run it: the mode is another row's cell and its evidence belongs to that act, not this one |
-| a changed or added flight leg, or a new `#### Origin <letter>` block | `### Effective Planning Days` is **stale** — **name no command** for it — and `outputs/traveler-presence.md` is behind: name **`/trip-record travelers`**, and do not run it |
+| a changed or added flight leg, or a new `#### Origin <letter>` block | `outputs/traveler-presence.md` is behind: name **`/trip-record travelers`**, and do not run it |
 | a changed `Check-in time:` or `Check-out time:` | `outputs/traveler-presence.md` is behind: name **`/trip-record travelers`**, and do not run it |
 | a new trip-level constraint | **`/trip-record travelers`**, and it does not run it — travelers' needs link to the constraint, and the link is the enrichment agent's |
 | an event that is now fixed | **`/trip-record event`**, and it does not run it — the note here is the summary, the row there is the truth |

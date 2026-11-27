@@ -55,7 +55,7 @@ conduct.
 | `templates/trip-context.template.md` | 78 | 84 | `### Return` | inherits | 8 | every untagged field **not named above** | YES (interviewer) | — |
 | `templates/trip-context.template.md` | 85 | 118 | `### Additional origins` | inherits | 8 | every untagged field **not named above** | YES (interviewer) | — |
 | `templates/trip-context.template.md` | 95 | 118 | `#### Origin B — [City, Country ([airport code])]` | inherits | 8 | every untagged field **not named above** | YES (interviewer) | — |
-| `templates/trip-context.template.md` | 119 | 160 | `### Effective Planning Days [DERIVED]` | named | 4 | `[DERIVED]` block — `### Effective Planning Days` | EXCLUDED (no-writer) | — |
+| `templates/trip-context.template.md` | 119 | 160 | `### Effective Planning Days [DERIVED]` | named | 4 | `[DERIVED]` — `### Effective Planning Days` | NO (marked) | — |
 | `templates/trip-context.template.md` | 161 | 180 | `## Accommodation` | default | 8 | every untagged field **not named above** | YES (interviewer) | — |
 | `templates/trip-context.template.md` | 171 | 174 | `### Transit Access [ENRICH]` | named | 3 | `[ENRICH]` fields — `### Transit Access`, `### Walkable Proximity`, `## Weather Context`, `## Destination Baseline`, `## Events & Calendar` | NO (marked) | — |
 | `templates/trip-context.template.md` | 175 | 180 | `### Walkable Proximity [ENRICH]` | named | 3 | `[ENRICH]` fields — `### Transit Access`, `### Walkable Proximity`, `## Weather Context`, `## Destination Baseline`, `## Events & Calendar` | NO (marked) | — |
