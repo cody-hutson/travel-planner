@@ -29853,8 +29853,37 @@ fbctl_assert() {
   done <<<"$res"
 }
 fbctl_assert
+# FB-CTL-REWORD — #2211 criterion 4 for this plant table: every field a row of it names, reworded on a copy in
+# its two statements with its former label declared, its new spelling derived by ft_c4_target, moves no row
+# off its pin. Graded over the copy's own form model, so a row reads each field as that copy labels it.
+fbctl_reword_assert() {
+  local r dm k x fr="" res n bad
+  r="$(ta_root FB-CTL-REWORD)"; dm="$r/reference/data-model.md"
+  for k in passport journey-comfort desire-recurrence desire-priority-tier; do
+    if ! x="$(ft_c4_reword "$r" "$k" "$(ft_c4_target "$(ft_rows "$dm" | awk -F'\t' -v k="$k" '$11 == k { n++; l = $3 } END { if (n == 1) print l }')")")"; then
+      FAIL "FB-CTL-REWORD: fixture integrity — the copy did not take its reword of $k: ${x#!}"; return 0
+    fi
+    fr="$fr$x"$'\n'
+  done
+  ft_c4_former "$dm" "$fr" || { FAIL "FB-CTL-REWORD: fixture integrity — the copy's former-label fence did not take its rows"; return 0; }
+  ta_model "$r" "$r" > "$r/model.tsv"
+  fb_plant_table "$dm" > "$r/fb-plants.tsv"
+  ta_plants "$r/model.tsv" "$TA_A2_F" < "$r/fb-plants.tsv" > "$r/fb-plants.out"
+  res="$(ta_plant_grade "$r/fb-plants.tsv" "$r/fb-plants.out")"
+  n="$(awk -F'\t' 'NF && $2 == "ok" { n++ } END { print n + 0 }' <<<"$res")"
+  bad="$(awk -F'\t' 'NF && $2 != "ok" { printf "%s %s; ", $1, $3 }' <<<"$res")"
+  if [ "$n" -eq 0 ] && [ -z "$bad" ]; then
+    FAIL "FB-CTL-REWORD: the plant table produced no verdict over the reworded copy — nothing was graded"
+  elif [ -n "$bad" ]; then
+    FAIL "FB-CTL-REWORD: with the fields keyed $(awk -F' [|] ' 'NF { printf "%s%s", s, $1; s = ", " }' <<<"$fr") reworded on a copy in their two statements, each with its former label declared, a row of the plant table leaves its pin: $bad"
+  else
+    PASS "FB-CTL-REWORD: with the fields keyed $(awk -F' [|] ' 'NF { printf "%s%s", s, $1; s = ", " }' <<<"$fr") reworded on a copy in their two statements, each with its former label declared, all $n row(s) of the plant table read at their pins over the copy's form model"
+  fi
+}
+fbctl_reword_assert
 md_flips ta_grade  'FB-T.P1' fbp_assert
 md_flips ta_plants 'FB-CTL'  fbctl_assert
+md_flips ta_plants 'FB-CTL-REWORD' fbctl_reword_assert
 
 # ── The ledger seams OW makes reachable (LG-CTL), each on a copy under $WORK.
 lgctl3_assert() {
