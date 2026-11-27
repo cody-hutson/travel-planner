@@ -4517,6 +4517,9 @@ st_cf_unres_note() { [ -z "$ST_CF_UNRES" ] || printf '%s — ' "$ST_CF_UNRES"; }
 #        carries, unlike its field's current label, and reusing no label another field carries now
 #        or carried before under a section one of which leads the other. It holds no row until a
 #        field is reworded, so it renders VACUOUS, and its controls plant rows on a synthetic table
+#   FT10 a declared former label still named in an agent prompt or a skill: a pointer shape FAILs and
+#        any other mention is REPORTED. It reads VACUOUS while the declaration holds no row, and its
+#        controls plant a declaration and a prompt, or declare a former label over the live prompts
 # Every arm but FT4 and FT9 has a standing control on a COPY under $WORK, asserted to have LANDED,
 # and graded as a DELTA against this run's own live reading — FT4's and FT9's are graded on synthetic
 # tables, as their entries above say — never against a clean-table literal — so a
@@ -4526,7 +4529,7 @@ st_cf_unres_note() { [ -z "$ST_CF_UNRES" ] || printf '%s — ' "$ST_CF_UNRES"; }
 # No count is spelled in this group: the declared row count is read from the document.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
-echo "FT — the field table: read through ft_rows, resolved on (section, label), its row count declared, its pair unique, its Key column total and its former labels declared"
+echo "FT — the field table: read through ft_rows, resolved on (section, label), its row count declared, its pair unique, its Key column total, its former labels declared, and no former label named as a pointer in a prompt or skill"
 
 FT_RAN=0
 FT_OK=1
@@ -5250,6 +5253,60 @@ ft_former_assert() {
   fi
 }
 
+# ── FT10 — a former label still named in an agent prompt or a skill (ADR-053 Decision 3, and the
+# residual its Consequences name: a reader that stays on labels goes stale at a reword unless
+# something reports it). The population is every tracked agent prompt and skill file, read from the
+# tree. The FAIL tier is a former label named as a POINTER — the shapes a prompt uses to tell a model
+# which line of a person's file to read, as the operator ruled at the scope-lock (PA-004): a code span
+# equal to the label, with or without its colon; any code span holding the label and its colon at a
+# word boundary; the label in bold, with or without its colon; and the label and its colon in double
+# quotes. Every other whole-word mention — plain prose, a table cell, the text of a code span — is
+# REPORTED and does not fail. Every tier is case-sensitive, code spans included, so a key in a code
+# span never reads as a former label. A former label that is also another field's current label is
+# REPORTED wherever it stands, naming both keys, because a mention of it may be the other field's.
+#   ft10_assert <data-model> <root> [<population-file>] — the population is <population-file>, one
+#   path a line relative to <root>, or, absent, the tracked agents/*.md, skills/**/*.md and SKILL.md
+#   of <root>. One verdict a call. A removed extractor (no F record) FAILs, never VACUOUS; an empty
+#   population FAILs as NOT EVALUATED; a scan that read fewer files than the population names FAILs;
+#   an empty declaration is VACUOUS. The scan's records are ft_former_mentions', stated above it.
+FT10_SHAPES='a code span equal to the label or to the label and its colon, a code span holding the label and its colon at a word boundary, the label in bold with or without its colon, and the label and its colon in double quotes'
+ft10_lines() {   # ft10_lines <scan> <FAIL|REPORT> — one tier's findings, one indented line each
+  awk -F'\t' -v t="$2" '$1 == t { printf "      %s %s:%s: `%s` (%s) — %s\n", (t == "FAIL") ? "at" : "REPORTED", $2, $3, $6, $4, $5 }' <<<"$1"
+}
+ft10_assert() {
+  local dm="$1" root="$2" pop="${3:-}" dec nfr nrow np rep nn nun nfail nrep nshr
+  if [ -z "$pop" ]; then
+    pop="$WORK/ft/ft10-pop.txt"
+    ( cd "$root" && git ls-files 'agents/*.md' 'skills/**/*.md' SKILL.md 2>/dev/null ) > "$pop"
+  fi
+  dec="$(ft_former_rows "$dm" 2>/dev/null)"
+  nfr="$(awk -F'\t' '$1 == "F" { n++ } END { print n + 0 }' <<<"$dec")"
+  nrow="$(awk -F'\t' '$1 == "R" { n++ } END { print n + 0 }' <<<"$dec")"
+  np="$(grep -c '[^[:space:]]' "$pop" 2>/dev/null || true)"
+  rep="$(ft_former_mentions "$dm" "$root" "$pop" 2>/dev/null)"
+  nn="$(awk -F'\t' '$1 == "N" { v = $2 } END { print v }' <<<"$rep")"
+  nun="$(awk -F'\t' '$1 == "UNREAD" { n++ } END { print n + 0 }' <<<"$rep")"
+  nfail="$(awk -F'\t' '$1 == "FAIL" { n++ } END { print n + 0 }' <<<"$rep")"
+  nrep="$(awk -F'\t' '$1 == "REPORT" { n++ } END { print n + 0 }' <<<"$rep")"
+  nshr="$(awk -F'\t' '$1 == "SHARED" { n++ } END { print n + 0 }' <<<"$rep")"
+  if [ "$nfr" -ne 1 ]; then
+    FAIL "FT10: the former-label extractor returned no fence record, so no former label was read and nothing below could be graded — a broken extractor, never an empty declaration"
+  elif [ "${np:-0}" -eq 0 ]; then
+    FAIL "FT10: NOT EVALUATED — the agent prompts and skill files resolved to zero files, so a clean verdict here would be a scan of nothing"
+  elif [ -z "$nn" ] || [ "$nn" -ne "$np" ] || [ "$nun" -ne 0 ]; then
+    FAIL "FT10: the mention scan read ${nn:-no} of the $np prompt and skill file(s) the population names, $nun of them unreadable — a scan that did not read the population cannot certify it"
+  elif [ "$nrow" -eq 0 ]; then
+    VACUOUS "FT10: the former-label declaration holds no row, so no former label can be named in the $np prompt and skill file(s) read — an EMPTY POPULATION of former labels, declared, proving nothing about this tree. CTL-FT10-PLANT, -PLAIN, -TABLE, -CASE, -SHARED, -NOEXTRACT, -NOPOP and -LIVE carry it on built and copied inputs"
+  elif [ "$nfail" -gt 0 ]; then
+    FAIL "FT10: $nfail mention(s) of a declared former label stand in a pointer shape in the $np agent prompt and skill file(s) read — $FT10_SHAPES. Each tells a model to read a line by a label the form no longer carries, and the reword's author edits each to the current label:"
+    ft10_lines "$rep" FAIL
+    ft10_lines "$rep" REPORT
+  else
+    PASS "FT10: none of the $nrow declared former label(s) stands in a pointer shape in the $np agent prompt and skill file(s) read — $FT10_SHAPES. $nrep other mention(s) are reported below and do not fail, and $nshr former label(s) are another field's current label, reported wherever they stand"
+    ft10_lines "$rep" REPORT
+  fi
+}
+
 # ── The key-addressed table writer, and the shared copy a criterion-4 arm reads (#2211 criterion 4).
 #
 # ft_row_set <data-model> <key> <column> <value> — in place, the ONE row of the classification table
@@ -5418,6 +5475,7 @@ ft_rule_assert "$FT_DOC" "$FT_SKILL"
 ft_route_assert "$FT_DOC" "$FT_FORMS"
 ft_keycol_assert "$FT_DOC"
 ft_former_assert "$FT_DOC"
+ft10_assert "$FT_DOC" "$ROOT"
 
 # ── The controls. Each mutates a COPY under $WORK, asserts the mutation LANDED, and compares the
 # copy's report with this run's LIVE report as a delta, so replaying a mutation on the tracked
@@ -5906,6 +5964,106 @@ if [ "$FT_OK" -eq 1 ]; then
   ft_f9_case MALFORMED 'MUST FIRE' '0 1' 1 'zz-alpha'
   ft_f9_case TWICE 'MUST FIRE' '0 1' 2
   ft_f9_case NOFENCE 'MUST FIRE' '0 1' 0
+
+  # ── FT10's controls. The live declaration holds no row until a field is reworded, so FT10 renders
+  # VACUOUS on the tree. Each control reads what FT10 prints over a copy of the data model whose
+  # former-label fence holds the control's rows, and a one-file population written here — or, for
+  # -LIVE, the tracked population itself. ft_capture runs an assertion with each verdict printed as
+  # P, F or V and a TAB, and ft10_read reduces that to "<verdicts> <verdict> <at-lines> <reported>".
+  ft_capture() {   # ft_capture <assertion> [args…]
+    ( PASS() { printf 'P\t%s\n' "$*"; }
+      FAIL() { printf 'F\t%s\n' "$*"; }
+      VACUOUS() { printf 'V\t%s\n' "$*"; }
+      "$@" 2>/dev/null )
+  }
+  ft10_read() {
+    awk -F'\t' '/^[PFV]\t/ { n++; v = $1 } /^      at / { a++ } /^      REPORTED / { r++ }
+      END { printf "%d %s %d %d", n + 0, (n == 1) ? v : "-", a + 0, r + 0 }' <<<"$1"
+  }
+  ft10_doc() {   # ft10_doc <out> [row…] — a copy of the live data model, its former-label fence holding the rows
+    local out="$1" rows; shift
+    rows="$(printf '%s\n' "$@")"$'\n'
+    cp "$FT_DOC" "$out" && ft_c4_former "$out" "$rows"
+  }
+  ft10_root() {    # ft10_root <dir> <relpath> <text> — a one-file population, listed in <dir>.pop
+    mkdir -p "$1/$(dirname "$2")" && printf '%s' "$3" > "$1/$2" && printf '%s\n' "$2" > "$1.pop"
+  }
+  FT10_W="$WORK/ft/ft10"; mkdir -p "$FT10_W"
+  FT10_DOC="$FT10_W/doc-plant.md"; FT10_DL=0
+  ft10_doc "$FT10_DOC" 'would-love | Wishlist' && [ "$(ft_former_rows "$FT10_DOC" | awk -F'\t' '$1 == "R" && $3 == "would-love" && $4 == "Wishlist" { n++ } END { print n + 0 }')" -eq 1 ] && FT10_DL=1
+
+  ft10_root "$FT10_W/plant" agents/planted.md $'# Planted prompt\nRead the traveller\'s `Wishlist` line.\nRead `Wishlist:` from their file.\nTheir file reads `- **Wishlist:** tide pools`.\nThe **Wishlist:** line is theirs.\nThe **Wishlist** field is theirs.\nThe line marked "Wishlist:" is theirs.\n'
+  ft10_out="$(ft_capture ft10_assert "$FT10_DOC" "$FT10_W/plant" "$FT10_W/plant.pop")"
+  ft10_got="$(ft10_read "$ft10_out")"
+  ft10_hit="$(awk '/^      at agents\/planted\.md:[2-7]: `Wishlist` \(would-love\)/ { n++ } END { print n + 0 }' <<<"$ft10_out")"
+  if [ "$FT10_DL" -eq 1 ] && [ "$ft10_got" = "1 F 6 0" ] && [ "$ft10_hit" -eq 6 ]; then
+    PASS "CTL-FT10-PLANT: MUST FIRE — a declaration of 'Wishlist' as a former label of would-love, and a planted prompt naming it once in each of the six pointer forms the FAIL tier names, read one FAIL naming each planted line, agents/planted.md lines 2 to 7, and the key — and nothing reported"
+  else
+    FAIL "CTL-FT10-PLANT: MUST FIRE — the declaration landed=$FT10_DL, and FT10 read '$ft10_got' (verdicts, verdict, lines failed, lines reported) where '1 F 6 0' is owed, naming $ft10_hit of the 6 planted lines"
+  fi
+  ft10_root "$FT10_W/plain" agents/plain.md $'# Plain prompt\nA Wishlist is what they hope for.\n'
+  ft10_out="$(ft_capture ft10_assert "$FT10_DOC" "$FT10_W/plain" "$FT10_W/plain.pop")"
+  ft10_got="$(ft10_read "$ft10_out")"
+  ft10_hit="$(awk '/^      REPORTED agents\/plain\.md:2: `Wishlist` \(would-love\) — prose/ { n++ } END { print n + 0 }' <<<"$ft10_out")"
+  if [ "$FT10_DL" -eq 1 ] && [ "$ft10_got" = "1 P 0 1" ] && [ "$ft10_hit" -eq 1 ]; then
+    PASS "CTL-FT10-PLAIN: MUST NOT FIRE — the same declaration and a prompt naming 'Wishlist' in plain prose read a PASS, with exactly one REPORTED line naming agents/plain.md line 2 as prose. A former label in prose is reported to the reword's author and does not fail the run"
+  else
+    FAIL "CTL-FT10-PLAIN: MUST NOT FIRE — FT10 read '$ft10_got' where '1 P 0 1' is owed, $ft10_hit REPORTED line(s) naming the prose line"
+  fi
+  ft10_root "$FT10_W/table" agents/table.md $'# Table prompt\n| Wishlist | Notes |\n|---|---|\n'
+  ft10_out="$(ft_capture ft10_assert "$FT10_DOC" "$FT10_W/table" "$FT10_W/table.pop")"
+  ft10_got="$(ft10_read "$ft10_out")"
+  ft10_hit="$(awk '/^      REPORTED agents\/table\.md:2: `Wishlist` \(would-love\) — table cell/ { n++ } END { print n + 0 }' <<<"$ft10_out")"
+  if [ "$FT10_DL" -eq 1 ] && [ "$ft10_got" = "1 P 0 1" ] && [ "$ft10_hit" -eq 1 ]; then
+    PASS "CTL-FT10-TABLE: MUST NOT FIRE — 'Wishlist' as a table cell, which in a prompt is a column header, reads a PASS with exactly one REPORTED line naming agents/table.md line 2 as a table cell"
+  else
+    FAIL "CTL-FT10-TABLE: MUST NOT FIRE — FT10 read '$ft10_got' where '1 P 0 1' is owed, $ft10_hit REPORTED line(s) naming the table cell"
+  fi
+  ft10_root "$FT10_W/case" agents/case.md $'# Case prompt\nRead `wishlist:` and **wishlist:** from it.\n'
+  ft10_out="$(ft_capture ft10_assert "$FT10_DOC" "$FT10_W/case" "$FT10_W/case.pop")"
+  ft10_got="$(ft10_read "$ft10_out")"
+  if [ "$FT10_DL" -eq 1 ] && [ "$ft10_got" = "1 P 0 0" ]; then
+    PASS "CTL-FT10-CASE: MUST NOT FIRE — 'wishlist' in lower case, in a code span with its colon and in bold, reads a PASS with nothing reported: every tier is case-sensitive, code spans included, so a key in a code span never reads as a former label"
+  else
+    FAIL "CTL-FT10-CASE: MUST NOT FIRE — FT10 read '$ft10_got' over a lower-case spelling where '1 P 0 0' is owed"
+  fi
+  FT10_SDOC="$FT10_W/doc-shared.md"; FT10_SL=0
+  ft10_doc "$FT10_SDOC" 'would-love | Pace' && [ "$(ft_former_rows "$FT10_SDOC" | awk -F'\t' '$1 == "R" && $4 == "Pace" { n++ } END { print n + 0 }')" -eq 1 ] && FT10_SL=1
+  ft10_root "$FT10_W/shared" agents/shared.md $'# Shared prompt\nRead `Pace:` from their file.\n'
+  ft10_out="$(ft_capture ft10_assert "$FT10_SDOC" "$FT10_W/shared" "$FT10_W/shared.pop")"
+  ft10_got="$(ft10_read "$ft10_out")"
+  ft10_hit="$(awk '/^      REPORTED agents\/shared\.md:2: `Pace` \(would-love\) — .*pace/ { n++ } END { print n + 0 }' <<<"$ft10_out")"
+  if [ "$FT10_SL" -eq 1 ] && [ "$ft10_got" = "1 P 0 1" ] && [ "$ft10_hit" -eq 1 ]; then
+    PASS "CTL-FT10-SHARED: MUST NOT FIRE — 'Pace', declared a former label of would-love while it is the current label of pace in another section, which FT9 permits, is REPORTED and not failed where a prompt names it in a pointer shape, the line naming both keys: a mention of it may be the other field's"
+  else
+    FAIL "CTL-FT10-SHARED: MUST NOT FIRE — the declaration landed=$FT10_SL, and FT10 read '$ft10_got' where '1 P 0 1' is owed, $ft10_hit REPORTED line(s) naming both keys"
+  fi
+  ft10_out="$( unset -f ft_former_rows; ft_capture ft10_assert "$FT10_DOC" "$FT10_W/plant" "$FT10_W/plant.pop" )"
+  ft10_got="$(ft10_read "$ft10_out")"
+  if [ "$ft10_got" = "1 F 0 0" ] && grep -qF 'returned no fence record' <<<"$ft10_out"; then
+    PASS "CTL-FT10-NOEXTRACT: MUST FIRE — with ft_former_rows unset, FT10 over the planted prompt reads one FAIL for a broken extractor, never VACUOUS: an empty declaration and an absent reader are told apart"
+  else
+    FAIL "CTL-FT10-NOEXTRACT: MUST FIRE — with ft_former_rows unset FT10 read '$ft10_got' where one FAIL naming the extractor is owed"
+  fi
+  : > "$FT10_W/empty.pop"
+  ft10_out="$(ft_capture ft10_assert "$FT10_DOC" "$FT10_W/plant" "$FT10_W/empty.pop")"
+  ft10_got="$(ft10_read "$ft10_out")"
+  if [ "$ft10_got" = "1 F 0 0" ] && grep -qF 'NOT EVALUATED' <<<"$ft10_out"; then
+    PASS "CTL-FT10-NOPOP: MUST FIRE — a population that names no file reads one FAIL, NOT EVALUATED, rather than a pass over nothing"
+  else
+    FAIL "CTL-FT10-NOPOP: MUST FIRE — an empty population read '$ft10_got' where one FAIL, NOT EVALUATED, is owed"
+  fi
+  FT10_LDOC="$FT10_W/doc-live.md"; FT10_LL=0
+  cp "$FT_DOC" "$FT10_LDOC" && ft_row_set "$FT10_LDOC" would-love Field '`ZZ Wishlist`' && ft_c4_former "$FT10_LDOC" 'would-love | Would love'$'\n' && FT10_LL=1
+  ft10_out="$(ft_capture ft10_assert "$FT10_LDOC" "$ROOT")"
+  ft10_got="$(ft10_read "$ft10_out")"
+  ft10_n="$(awk '/^      at / { n++ } END { print n + 0 }' <<<"$ft10_out")"
+  ft10_hit="$(awk '/^      at agents\/destination-ideation\.md:[0-9]+: `Would love` \(would-love\)/ { n++ } END { print n + 0 }' <<<"$ft10_out")"
+  if [ "$FT10_LL" -eq 1 ] && [ "${ft10_got%% *}" = 1 ] && [ "$(cut -d' ' -f2 <<<"$ft10_got")" = F ] && [ "$ft10_hit" -ge 1 ]; then
+    PASS "CTL-FT10-LIVE: MUST FIRE — a copy of the data model rewording would-love and declaring 'Would love' its former label, scanned over the tracked prompt and skill files, reads one FAIL naming $ft10_n pointer-shaped mention(s), $ft10_hit of them in agents/destination-ideation.md: the arm finds the live population, and a reword of that field would surface the lines its author must change"
+  else
+    FAIL "CTL-FT10-LIVE: MUST FIRE — the reword landed=$FT10_LL, and FT10 over the tracked population read '$ft10_got', $ft10_hit pointer-shaped mention(s) in agents/destination-ideation.md where at least one is owed"
+  fi
 fi
 
 if [ "$FT_RAN" -ne 1 ]; then
