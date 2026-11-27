@@ -12051,8 +12051,15 @@ s33d_assert() {
 # stands, because only there does an approval on file have a code under an earlier reading: a declared
 # trip never published, with one of two approvals given for the plan's code under reading 1, gets the
 # same words for "the plan the approvals on file were given for", and no word of a published plan.
+# A fifth limb, at that reading too: a declared trip at a threshold of 2 whose baseline names reading 1,
+# with one approval on file for the plan's code now, once on a page carrying the stray `<` (the words that
+# cannot tell) and once on a page carrying no construct (the words that the plan itself has moved), is told
+# that the approvals on file for that code do not yet meet the threshold, and never that no approval names
+# it; the instruction to ask, record and rebuild stands, and no revert is named.
 # CONTROL: the same trip with every record at the raised reading gives the shipped abort, revert
-# included, and so does the never-published trip whose one approval names the plan's code now.
+# included, and so does the never-published trip whose one approval names the plan's code now; the
+# fifth limb's two trips read one approval of two for the plan's code now, and the same two trips with
+# no approval on file are told that no approval on file names the code.
 s33e_words() { # <abort text> <what was recorded> <1 when a usable baseline exists, else 0> -> ok, or what is missing
   local t="$1" w=""
   [ "$(s33_has "$t" "$2 was recorded by an engine that reads pages differently")" = 1 ] || w="$w no-lead"
@@ -12065,8 +12072,26 @@ s33e_words() { # <abort text> <what was recorded> <1 when a usable baseline exis
   [ "$(s33_has "$t" 'revert')" = 0 ] || w="$w revert"
   printf '%s' "${w:-ok}"
 }
+s33e_short() { # <abort text> <moved|cannot> <1 when one approval below the threshold is on file, else 0> -> ok, or what is missing
+  local t="$1" w="" n=$((1 - $3))
+  if [ "$2" = moved ]; then [ "$(s33_has "$t" 'reads the same under both, so the plan itself has moved')" = 1 ] || w="$w no-moved"
+  else [ "$(s33_has "$t" 'cannot tell')" = 1 ] || w="$w no-cannot-tell"; fi
+  [ "$(s33_has "$t" 'do not yet meet the threshold')" = "$3" ] || w="$w shortfall-not-$3"
+  [ "$(s33_has "$t" 'no approval on file names')" = "$n" ] || w="$w none-named-not-$n"
+  [ "$(s33_has "$t" 'share the approval line')" = 1 ] || w="$w no-share"
+  [ "$(s33_has "$t" 'Once the approvals meet the threshold')" = 1 ] || w="$w no-instruction"
+  [ "$(s33_has "$t" '(state: unconfirmed)')" = 1 ] || w="$w no-state"
+  [ "$(s33_has "$t" 'revert')" = 0 ] || w="$w revert"
+  printf '%s' "${w:-ok}"
+}
+s33e_plain() { # <name> -> a fresh trip dir holding sa_page's render at 16:30, which carries no construct, and no sidecar
+  local d="$WORK/s33-$1"
+  rm -rf "$d"; mkdir -p "$d/outputs"
+  sa_page "$d/$S15_RENDER" '' '' 16:30
+  printf '%s' "$d"
+}
 s33e_assert() {
-  local p r b c wp wr wb ec l lc lw wl el
+  local p r b c wp wr wb ec l lc lw wl el k kc kn knc tk tkt tn tnt wk wkc wkn wknc
   p="$(s33_trip s33e-p '' '' 16:30)"; s33_rec "$p/.published-itinerary" "$S33_P14" published
   sa_declare "$p" 1 zqa1; sa_rec "$p" zqa1 approve "$S33_P14"
   r="$(s33_trip s33e-r '' '' 16:30)"; s33_dec "$r/.change-confirmed" "$S33_P14"
@@ -12084,12 +12109,26 @@ s33e_assert() {
   lc="$(s33_trip s33e-lc '' '' 16:30)"; sa_declare "$lc" 2 zqa1 zqb2; sa_rec "$lc" zqa1 approve "$(itinerary_digest "$lc/$S15_RENDER")"
   wl="$(s33e_words "$( ( require_change_confirmation "$l" ) 2>&1 >/dev/null )" 'the plan the approvals on file were given for' 0)"
   el="$( ( require_change_confirmation "$lc" ) 2>&1 >/dev/null )"
-  if [ "$(s33_stray "$p")$(s33_stray "$r")$(s33_stray "$b")$(s33_stray "$c")$(s33_stray "$l")" != 11111 ] || [ "$(s33_has "$ec" 'revert the working copy')" != 1 ] || [ "$(s33_has "$ec" 'reads pages differently')" != 0 ] || [ "$(s33_has "$el" 'revert the working copy')" != 1 ] || [ "$(s33_has "$el" 'reads pages differently')" != 0 ]; then
+  k="$(s33_trip s33e-k '' '' 16:30)"; s33_rec "$k/.published-itinerary" "$S33_P14" published; sa_declare "$k" 2 zqa1 zqb2
+  sa_rec "$k" zqa1 approve "$(itinerary_digest "$k/$S15_RENDER")"
+  kc="$(s33_trip s33e-kc '' '' 16:30)"; s33_rec "$kc/.published-itinerary" "$S33_P14" published; sa_declare "$kc" 2 zqa1 zqb2
+  kn="$(s33e_plain s33e-kn)"; s33_rec "$kn/.published-itinerary" "$SA_P14" published; sa_declare "$kn" 2 zqa1 zqb2
+  sa_rec "$kn" zqa1 approve "$(itinerary_digest "$kn/$S15_RENDER")"
+  knc="$(s33e_plain s33e-knc)"; s33_rec "$knc/.published-itinerary" "$SA_P14" published; sa_declare "$knc" 2 zqa1 zqb2
+  read -r tk tkt _ <<<"$(_approval_tally "$k" "$(itinerary_digest "$k/$S15_RENDER")")"
+  read -r tn tnt _ <<<"$(_approval_tally "$kn" "$(itinerary_digest "$kn/$S15_RENDER")")"
+  wk="$(s33e_short "$( ( require_change_confirmation "$k" ) 2>&1 >/dev/null )" cannot 1)"
+  wkc="$(s33e_short "$( ( require_change_confirmation "$kc" ) 2>&1 >/dev/null )" cannot 0)"
+  wkn="$(s33e_short "$( ( require_change_confirmation "$kn" ) 2>&1 >/dev/null )" moved 1)"
+  wknc="$(s33e_short "$( ( require_change_confirmation "$knc" ) 2>&1 >/dev/null )" moved 0)"
+  if [ "$(s33_stray "$k")$(s33_stray "$kc")$(s33_stray "$kn")$(s33_stray "$knc")" != 1100 ] || [ "$tk $tkt $tn $tnt" != '1 2 1 2' ] || [ "$wkc" != ok ] || [ "$wknc" != ok ]; then
+    FAIL "S33e: CONTROL — the fifth limb's trips read one approval of two for the plan's code now [$tk of $tkt] and [$tn of $tnt] (want 1 of 2 each), or carry the stray '<' [$(s33_stray "$k")$(s33_stray "$kc")$(s33_stray "$kn")$(s33_stray "$knc")] (want 1100), or their twins with no approval on file were not told that no approval on file names the code (words [$wkc] [$wknc], want ok ok), so the limb below is not a measurement"
+  elif [ "$(s33_stray "$p")$(s33_stray "$r")$(s33_stray "$b")$(s33_stray "$c")$(s33_stray "$l")" != 11111 ] || [ "$(s33_has "$ec" 'revert the working copy')" != 1 ] || [ "$(s33_has "$ec" 'reads pages differently')" != 0 ] || [ "$(s33_has "$el" 'revert the working copy')" != 1 ] || [ "$(s33_has "$el" 'reads pages differently')" != 0 ]; then
     FAIL "S33e: CONTROL — the declared trip with every record at the raised reading, or the never-published trip whose one approval names the plan's code now, did not give the shipped abort with its revert, or a render lacks the stray '<', so the words below are not a measurement"
-  elif [ "$wp" = ok ] && [ "$wr" = ok ] && [ "$wb" = ok ] && [ "$wl" = ok ]; then
-    PASS "S33e: on a trip that declares approvers, a baseline, a never-published trip's confirmation record, and a confirmation record behind a baseline at this engine's reading, each naming an earlier reading, are named as what was recorded — the published plan, the plan last approved, the plan last approved — and, at the engine's reading as it stands, a never-published trip with one of two approvals given for the plan's code under reading 1 is told the same of the plan the approvals on file were given for; each abort asks for approval once more, names sharing the approval line and update or rotate, says whether the published plan is unchanged only where a baseline exists, and names no revert; control: every record at the raised reading, and a never-published trip whose approval names the plan's code now, give the shipped abort, revert included"
+  elif [ "$wp" = ok ] && [ "$wr" = ok ] && [ "$wb" = ok ] && [ "$wl" = ok ] && [ "$wk" = ok ] && [ "$wkn" = ok ]; then
+    PASS "S33e: on a trip that declares approvers, a baseline, a never-published trip's confirmation record, and a confirmation record behind a baseline at this engine's reading, each naming an earlier reading, are named as what was recorded — the published plan, the plan last approved, the plan last approved — and, at the engine's reading as it stands, a never-published trip with one of two approvals given for the plan's code under reading 1 is told the same of the plan the approvals on file were given for; each abort asks for approval once more, names sharing the approval line and update or rotate, says whether the published plan is unchanged only where a baseline exists, and names no revert; with one of two approvals on file for the plan's code now and a baseline under reading 1, the words that cannot tell and the words that the plan itself has moved each say the approvals on file for that code do not yet meet the threshold, never that no approval names it, still asking for approval and naming no revert; control: every record at the raised reading, and a never-published trip whose approval names the plan's code now, give the shipped abort, revert included, and the fifth limb's trips with no approval on file are told that no approval on file names the code"
   else
-    FAIL "S33e: the baseline's words[$wp]; the never-published record's words[$wr]; the record behind a current baseline[$wb]; the approvals given under reading 1[$wl]"
+    FAIL "S33e: the baseline's words[$wp]; the never-published record's words[$wr]; the record behind a current baseline[$wb]; the approvals given under reading 1[$wl]; one approval below a threshold of 2, the words that cannot tell[$wk] and the words that the plan moved[$wkn]"
   fi
 }
 
