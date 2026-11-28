@@ -74,7 +74,7 @@ Once `trips/` holds more than one trip, every command also takes `--trip <slug>`
 | `/trip-record` | `log` | — | ACTIVE | any | any | G8 |
 | `/trip-record` | `link` | `<name> <person-id>` | ACTIVE | any | any | G8 |
 | `/trip-record` | `unlink` | `<name>` | ACTIVE | any | any | G8 |
-| `/trip-record` | `promote` | `<name> <field-label>` | ACTIVE | any | any | G8 |
+| `/trip-record` | `promote` | `<name> <field>` | ACTIVE | any | any | G8 |
 | `/trip-record` | `erase` | `<person-id>` | ANY | any | any | G8 |
 | `/trip-record` | `extract` | `<name>` | ACTIVE | any | any | G8 |
 | `/trip-record` | `group-new` | `<name>` | ANY | any | any | G8 |

@@ -269,7 +269,7 @@ name: Artifact schema
 #        carrier included. Every arm carries a control that must fire and one that must not
 #   MC   may-carry, typed per side (ADR-026 § Decision 3): the envelope side over the channel
 #        table and ADR-030 § 2's private-site-field-declaration fence, keyed on the field's
-#        (section, label) pair and held to § 2's prose in both directions, including the one
+#        key and held to § 2's prose in both directions, including the one
 #        cell ADR-030 moves; on the encrypted limb a field the declaration does not carry, or
 #        carries only if marked, reads UNDETERMINED, never admit; and the three-valued
 #        conjunction with the denial side, UNDETERMINED a third outcome asserted by exit code

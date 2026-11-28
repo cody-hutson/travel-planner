@@ -211,54 +211,54 @@ touched by it.
 
 ```private-site-field-declaration
 # restates: Decision 2 -> the IN list and the OUT list, item by item, as written
-# key: reference/data-model.md § Field Scope -> a field is its (section, label) pair
-# class        | section              | label               | as-written
-IN           | About you            | Name                | name
-IN           | About you            | Relationship        | relationship
-IN           | Destination leanings | Would love          | Would love
-IN           | Destination leanings | Rather skip         | Rather skip
-IN           | Destination leanings | Trip vibe           | Trip vibe
-IN           | —                    | —                   | the destination shortlist built from them
-IN           | Dates & availability | Can travel          | can travel
-IN           | Dates & availability | Blackout            | blackout dates
-IN           | Dates & availability | Trip length         | trip length
-IN           | Getting there & back | Arrive / leave      | arrive / leave
-IN           | Getting there & back | Leaving from        | leaving from
-IN           | Getting there & back | Journey comfort     | journey comfort
-IN           | Where you stay       | Lodging style       | lodging style
-IN           | Where you stay       | Rooming             | rooming
-IN           | Interests & tastes   | Interests           | interests
-IN           | Interests & tastes   | Cuisine appetite    | cuisine appetite
-IN           | Interests & tastes   | Been here before?   | been here before
-IN           | Interests & tastes   | Already done        | already done
-IN           | Travel style & pace  | Pace                | pace
-IN           | Travel style & pace  | Day rhythm          | day rhythm
-IN-IF-MARKED | Desires              | Desire              | desires the traveller marks as group-facing
-IN-IF-MARKED | Desires              | Priority tier       | desires the traveller marks as group-facing
-IN-IF-MARKED | Desires              | Recurrence          | desires the traveller marks as group-facing
-IN-IF-MARKED | Desires              | Theme tag(s)        | desires the traveller marks as group-facing
-IN-IF-MARKED | Desires              | Overlap             | desires the traveller marks as group-facing
-IN-IF-MARKED | Anything else        | Special occasion?   | the special occasion
-OUT          | —                    | —                   | the cost estimate
-OUT          | Budget appetite      | Comfort range       | comfort range
-OUT          | Budget appetite      | Splurge appetite    | splurge appetite
-OUT          | Getting there & back | Passport            | the passport field
-OUT          | Needs                | Category            | needs
-OUT          | Needs                | Specific            | needs
-OUT          | Needs                | Applies to          | needs
-OUT          | —                    | —                   | people who did not fill in their own form
-OUT          | About you            | Party               | Party
-OUT          | —                    | —                   | contact and emergency details
-OUT          | —                    | —                   | the trip log
-OUT          | —                    | —                   | the validation report
-OUT          | —                    | —                   | cross-trip group records
-OUT          | Travel style & pace  | Novelty vs comfort  | novelty vs comfort
-OUT          | Travel style & pace  | Planning style      | planning style
-OUT          | People dynamics      | Group time          | group time
-OUT          | People dynamics      | Whole-group moments | whole-group moments
-OUT          | People dynamics      | Solo, I'd           | solo
-OUT          | People dynamics      | Split off with      | split off with
-OUT          | —                    | —                   | satisfaction metrics
+# key: reference/data-model.md § Field Scope -> a field is named by its key, the Key cell of its row
+# class        | key                  | as-written
+IN           | name                 | name
+IN           | relationship         | relationship
+IN           | would-love           | Would love
+IN           | rather-skip          | Rather skip
+IN           | trip-vibe            | Trip vibe
+IN           | —                    | the destination shortlist built from them
+IN           | can-travel           | can travel
+IN           | blackout             | blackout dates
+IN           | trip-length          | trip length
+IN           | arrive-leave         | arrive / leave
+IN           | leaving-from         | leaving from
+IN           | journey-comfort      | journey comfort
+IN           | lodging-style        | lodging style
+IN           | rooming              | rooming
+IN           | interests            | interests
+IN           | cuisine-appetite     | cuisine appetite
+IN           | been-here-before     | been here before
+IN           | already-done         | already done
+IN           | pace                 | pace
+IN           | day-rhythm           | day rhythm
+IN-IF-MARKED | desire               | desires the traveller marks as group-facing
+IN-IF-MARKED | desire-priority-tier | desires the traveller marks as group-facing
+IN-IF-MARKED | desire-recurrence    | desires the traveller marks as group-facing
+IN-IF-MARKED | desire-theme-tags    | desires the traveller marks as group-facing
+IN-IF-MARKED | desire-overlap       | desires the traveller marks as group-facing
+IN-IF-MARKED | special-occasion     | the special occasion
+OUT          | —                    | the cost estimate
+OUT          | comfort-range        | comfort range
+OUT          | splurge-appetite     | splurge appetite
+OUT          | passport             | the passport field
+OUT          | need-category        | needs
+OUT          | need-detail          | needs
+OUT          | need-applies-to      | needs
+OUT          | —                    | people who did not fill in their own form
+OUT          | party                | Party
+OUT          | —                    | contact and emergency details
+OUT          | —                    | the trip log
+OUT          | —                    | the validation report
+OUT          | —                    | cross-trip group records
+OUT          | novelty-vs-comfort   | novelty vs comfort
+OUT          | planning-style       | planning style
+OUT          | group-time           | group time
+OUT          | whole-group-moments  | whole-group moments
+OUT          | solo                 | solo
+OUT          | split-off-with       | split off with
+OUT          | —                    | satisfaction metrics
 ```
 
 ### 3. The share mark, and the concealed occasion
@@ -607,3 +607,23 @@ mark: such a field is in when its traveller marks it, and personal otherwise. Th
 field § *Decision* 2 does not name — none of the trip context's fields, which those lists do not
 name; where such a field carries an out kind of value, § *Decision* 5 binds it by value, and the
 fence does not restate § *Decision* 5. The amendment replaced no wording, so none is quoted here.
+
+**Amendment (2026-11-26, Thursday) — § *Decision* 2's `private-site-field-declaration` fence names
+each field by its key; no decision changes.** The fence restated § *Decision* 2's IN and OUT lists
+over a field's `(section, label)` pair, so a reword of a label broke its resolution.
+[ADR-053](ADR-053-a-field-keeps-its-key.md) gives every field a key, the `Key` cell of its row in
+`reference/data-model.md` § *Field Scope*, which a reword leaves alone, and its Decision 9 makes this
+edit an amendment. A row that names a field now names it by its key, in place of its section and
+label cells. A row that names no field carries the em dash in that one cell. Every row keeps its
+class and its `as-written` words, and no row is added or removed. A row's former section and label
+are those of its key's row in that table. The fence's comment lines that defined the old key are
+replaced. They read:
+
+```text
+# key: reference/data-model.md § Field Scope -> a field is its (section, label) pair
+# class        | section              | label               | as-written
+```
+
+The entry of 2026-10-08 describes the fence as it was declared on that date, and it is not rewritten.
+§ *Decision* 2's prose is unchanged. How its readers hold it to the fence after a later reword is
+[ADR-053](ADR-053-a-field-keeps-its-key.md) Decision 10's.

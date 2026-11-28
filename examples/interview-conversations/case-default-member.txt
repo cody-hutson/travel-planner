@@ -9,9 +9,9 @@ style: none
 traveller: TE — terse, an invented traveller
 answered-before: none
 T1 I | Is that something you want once, or every day?
-L4 put=Desires › Recurrence#1 kind=ask example=no carries=«once, every day»
+L4 put=desire-recurrence#1 kind=ask example=no carries=«once, every day»
 T2 P | Not sure, really.
-L3 Desires › Recurrence#1 = no-member
+L3 desire-recurrence#1 = no-member
 --- record
-V Desires › Recurrence#1 = one-off
-X OW-C Desires › Recurrence#1 = fail:A3
+V desire-recurrence#1 = one-off
+X OW-C desire-recurrence#1 = fail:A3

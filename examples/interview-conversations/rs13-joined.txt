@@ -9,9 +9,9 @@ style: none
 traveller: AF — answers freely, an invented traveller
 answered-before: none
 T1 I | What do you want from this trip?
-L4 put=Desires › Desire#1 kind=ask example=no
+L4 put=desire#1 kind=ask example=no
 T2 P | A day on a river boat.
-L3 Desires › Desire#1 = answer
+L3 desire#1 = answer
 --- record
-V Desires › Desire#1 = a day on a riverboat
-X OW-C Desires › Desire#1 = fail:riverboat
+V desire#1 = a day on a riverboat
+X OW-C desire#1 = fail:riverboat

@@ -46,6 +46,104 @@ to 59,801, beneath 64,173; `skills/trip/SKILL.md` grew 49 to 115,137, beneath 11
 `skills/trip-publish/SKILL.md` grew 157 to 48,605, beneath 48,711. `reference/adr/ADR-052-a-body-ends-where-the-browser-ends-it.md`,
 amended in this release, grew 1,080 bytes to 13,290 and is below its class floor, so it owes no row.
 
+## [0.80.0] — 2026-11-27 — A label edit touches only the label
+
+Rewording a question on either guided intake form now touches the label's two statements, its bullet on
+the form and its row in the classification table, and one former-label row. Beyond those, a reword owes
+an edit where an agent prompt or a skill points a model at the old words: the suite fails on each such
+line until it is edited, and reports a plain-prose mention without failing. The old words also stand on
+in the guided forms' own instructions and guide text outside the two statements, in the trip-context
+template, in the data model's prose outside its table and in the worked examples' prose, which no arm
+reports, and a reword marks that form's grade blocks stale for a regrade without failing them. The test
+conversations and `ADR-030`'s private-site declaration name a field by its key, and
+every reader of a written profile accepts a field's former labels, so no form, profile or person record
+is rewritten, and a profile written under an old label still reads as the field it was written for. No
+label is reworded by this release.
+
+**The test conversations name a field by its key.** A reference is the bare key, as in
+`L3 rooming = answer` or `answered-before: rooming`, and `#<unit>` still marks a repeat block. The
+`<section> › <label>` form is retired, and so is the quoting `Solo, I'd` needed for its comma; group
+CF's banner and the conversations' README state the grammar. All 60 conversations, 757 references, were
+rewritten once by a script that is not committed, after a second derivation of its mapping, by a
+separate parse, agreed with it on every row. Group CF refuses, each for its own reason, a reference in
+the retired form, a quoted key, a key the classification table does not carry, a key of the other
+guided form and an `answered-before` entry that names no field. FB-C's bullet 4 and RS-21 read a
+field's former labels, and an adjudication rules a `mech` line only where its token ends as a key ends,
+so a ruling on `rooming#2` no longer rules a line on `rooming`.
+
+**The grade record moved with them.** Its 16 `mech` lines were rewritten to name their fields by key,
+and so were the operator's four adjudication lines, lines 55, 80, 107 and 172 of
+`examples/interview-conversations/grade-record.txt`: each `mech <check> <field>` token in them moved
+from a label to a key, and every date and every ground was left as it stood. No `T` line changed, so
+every transcript hash still holds.
+
+**`ADR-030`'s private-site declaration is keyed, by a dated amendment.** Each row of its
+`private-site-field-declaration` fence is now `class | key | as-written`. The 38 rows that named a
+field were given its key in place of its section and label, the eight that named none kept their em
+dash, now in that one cell, and every class and `as-written` cell was left as it stood, in the same
+order. The edit is an entry of 2026-11-26 in the record's `## Amendment history`, in the form `ADR-053`
+Decision 9 decides, quoting the comment lines it replaces; no decision of `ADR-030` changes. Group MC
+resolves a row by key and refuses a key the table does not carry, a cell that is not a key and a row
+left in the old four-cell form. MC's and NC's readers of the record's prose accept a field's former
+labels wherever they accept its current one, so a reword never requires the record to be rewritten.
+
+**`promote` takes a key, a label or a former label.** The verb is now
+`/trip-record promote <name> <field>`, in its own section and in the command reference, and `<field>`
+names one field of the record's own form by its key, its current label or one of its former labels,
+compared as written. Two refusals are new, and each writes nothing. A token that names more than one
+field, by any pairing of those spellings, is refused naming every field it names, and none is picked. A
+`slot` field that stands more than once across its spellings, in the trip file or in the record, is
+refused as `MALFORMED-SLOT`, naming each line. A promoted value lands in the record's existing line for
+the field under whatever spelling that line carries, or under the current label where the record has
+none. The display-name refusal covers the field's key as well as its label.
+
+**Standing rule 20, and the prompts.** The new rule binds every `/trip-record` verb, present and
+future: a field of a traveller file or a person record is read under its current label or any former
+label, and no label is rewritten, so a line a verb writes into keeps its label and a line it creates
+takes the current one. The reconciler's prompt says the same of both files, and the
+destination-ideation prompt reads a leaning written under a former label as that field.
+
+**One sentence in the data model.** `reference/data-model.md` § *Former labels* now says that a field
+answered under more than one of its spellings occurs more than once, so a `slot` field answered that
+way is `MALFORMED-SLOT` under O3, as a label standing twice already is. Standing rule 20, the
+reconciler's clause and `promote`'s refusal cite it.
+
+**The suite holds it.** Group FT gains FT10, FT4w and FT11. FT10 fails where an agent prompt or a skill
+points at a declared former label: a code span equal to the label or holding it with its colon, the
+label in bold, or the label in double quotes with its colon. It reports a plain-prose mention or a
+table cell's plain text without failing; it reads VACUOUS until the first reword gives the
+declaration a row, and eight controls carry it. FT4w resolves a bullet written under a former label,
+and FT11 finds that reading stated in each of its homes: standing rule 20, `promote`, the reconciler's
+and the destination-ideation prompts, and § *Former labels*. Groups RL, XT, HZ, PM, ER, NC, CHR and FB
+now find a field by its key, or read a written profile under its current or a former label, where they
+read a field by its current label alone. CF8 and MC6 reword `rooming`, `solo` and `would-love` in both
+statements on a shared copy of the tree and require no CF, MC or NC verdict to move. The copy derives
+each new label at run time from the label it rewords, so it keeps working after a real reword of one of
+those fields, and seven new controls, each registered with group MD, plant a tree as it would stand
+after one. `.github/workflows/artifact-schema.yml` changes in one comment.
+
+**The release was checked against a reword.** Before the build was reported done, the schema suite was
+run on copies of the tree with twelve guided-form fields reworded across five copies, each with its
+former-label rows, and on three twins with the rows left out, and every other required suite was run on
+four of the five. Setting aside the checks that read git history, which a copy does not have, the only
+red arm on the five was FT10, naming the prompt and skill lines each reword must change; on the twins
+the readers of former labels went red, as they must. The probe is not an arm of the suite and runs on
+no push: it is a check this release was held to, made on copies outside the tree.
+
+**Size fence.** Read against `v0.79.0`, the previous release tag,
+`CH_EMIT=growth bash scripts/test-corpus-hygiene.sh` lists every row kept, none new, raised, lowered or
+dropped, and no row was re-pinned. Each sized file this release changed grew beneath its row:
+`skills/trip-record/SKILL.md` grew 2,961 to 466,822, beneath 470,268; `agents/00-enrichment.md` 426 to
+81,567, beneath 82,813; `ADR-030` 299 to 47,533, beneath 51,958; and `reference/data-model.md` 291 to
+236,434, beneath 246,314. `agents/destination-ideation.md`, `reference/command-reference.md` and the
+conversations' README owe no row, and this file is a release log, which owes none.
+
+**What this release does not do.** The guarded-label coupling is recorded only: a reword of a label the
+publish guard and the traveller projection match, such as `Passport`, has to add its new spelling to
+their selectors before it lands, and nothing checks that it does. Nothing yet enforces a key's unit
+scope, that a block field's key carries its `#<unit>` and a slot field's carries none, which the old
+form did not enforce either; that rule is held to a later release.
+
 ## [0.79.0] — 2026-11-26 — The group sees its destination shortlist on the private site before a destination is chosen
 
 While a trip is still deciding where to go, the group can now see its destination shortlist on the

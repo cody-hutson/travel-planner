@@ -9,27 +9,27 @@ style: none
 traveller: TE — terse, an invented traveller
 answered-before: none
 T1 I | Where would you be thrilled to go?
-L4 put=Destination leanings › Would love kind=ask example=no
+L4 put=would-love kind=ask example=no
 T2 P | Coast.
-L3 Destination leanings › Would love = thin
+L3 would-love = thin
 T3 I | You said coast — anywhere in particular?
-L4 put=Destination leanings › Would love kind=follow-up example=no carries=«coast»
+L4 put=would-love kind=follow-up example=no carries=«coast»
 T4 P | Portugal.
-L3 Destination leanings › Would love = answer
+L3 would-love = answer
 T5 I | Anywhere you'd rather skip?
-L4 put=Destination leanings › Rather skip kind=ask example=no
+L4 put=rather-skip kind=ask example=no
 T6 P | Long flights.
-L3 Destination leanings › Rather skip = answer
+L3 rather-skip = answer
 T7 I | Where would you set out from?
-L4 put=Getting there & back › Leaving from kind=ask example=no
+L4 put=leaving-from kind=ask example=no
 T8 P | Manchester.
-L3 Getting there & back › Leaving from = answer
+L3 leaving-from = answer
 T9 I | How do you like to pace a trip?
-L4 put=Travel style & pace › Pace kind=ask example=no
+L4 put=pace kind=ask example=no
 T10 P | Relaxed.
-L3 Travel style & pace › Pace = answer
+L3 pace = answer
 --- record
-V Destination leanings › Would love = coast, Portugal
-V Destination leanings › Rather skip = long flights
-V Getting there & back › Leaving from = Manchester
-V Travel style & pace › Pace = relaxed
+V would-love = coast, Portugal
+V rather-skip = long flights
+V leaving-from = Manchester
+V pace = relaxed

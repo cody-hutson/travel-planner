@@ -72,6 +72,8 @@ traveller file whose frontmatter carries a `person:` line holds only part of tha
 traveller's leanings: record it as `LEANINGS INCOMPLETE` (see *Missing leanings*
 below), never as no preference. You need only those three fields. Open none of
 those files yourself.
+A leaning written under one of those fields' former labels
+(`reference/data-model.md` § *Former labels*) is read as that field.
 A traveler who left all three blank simply contributes no leanings yet; that is
 a normal state, not an error (see *Missing leanings* below).
 

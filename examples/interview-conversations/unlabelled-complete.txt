@@ -13,7 +13,7 @@ T2 P | Own room, if it's not too dear.
 T3 I | And is there anything you'd want everyone there for?
 T4 P | The first dinner.
 --- record
-V Where you stay › Rooming = own room
-V People dynamics › Whole-group moments = the first dinner, and the boat day
-X OW-C Where you stay › Rooming = nd:unlabelled
-X OW-C People dynamics › Whole-group moments = fail:and|the|boat|day
+V rooming = own room
+V whole-group-moments = the first dinner, and the boat day
+X OW-C rooming = nd:unlabelled
+X OW-C whole-group-moments = fail:and|the|boat|day

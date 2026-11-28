@@ -17,109 +17,109 @@ run-seq: 1
 run-id: 16511be0-229b-4e33-a24e-f22442f32a29
 transcript-sha256: 0224799e24aa23e60f88688ebfb486d0c930be0167c17c53e9a52491c8b5695d
 T1 I | Before the first question, here's what this form says about who can see what you share, in its own words:\n\n> - **This file itself is never published.** It lives under `trips/` in your data folder, so put your real details here. It shapes the trip's plan, and the plan can be published as the trip's **private site**. The private site is encrypted: it opens for whoever holds the trip's passphrase, which your organizer gives the group, so anyone it is passed on to can open it.\n> - **The site may show the group** who is coming, your destination leanings, your dates and when you arrive and leave, your rooming, and your interests and tastes. Your other answers shape the plan too, and the plan on the site can reflect them and say whose need or wish a step serves — a rest stop, or who heads off together on a free afternoon.\n> - **A change reaches the site when your organizer next re-plans the trip and republishes it.** Earlier versions of the site, and any copy someone saved, keep what they showed.\n> - **Your organizer can also publish the plan as an open page that anyone can read.** That is their own deliberate step.\n\nThere are three ⭐ fields and I'll take those first — about 2–3 minutes — then you can decide whether to carry on.\n\nStarting with destination leanings:\n\n1. Is the destination already decided for this trip? (If it is, we skip this section entirely.)\n2. If it isn't — what kind of trip are you after? Suggestions from the form: "beach", "city", "nature", "culture", "food", or "mix". Something in your own words works just as well here.\n\nAnd one more thing I'll need for the top of the file: what name should go on the title line?
-L4 put=Destination leanings › Trip vibe kind=ask example=no carries=«beach, city, nature, culture, food, mix»
+L4 put=trip-vibe kind=ask example=no carries=«beach, city, nature, culture, food, mix»
 T2 P | Vessa Quillon. A mix — mostly city, with some time by the water.
-L3 Destination leanings › Trip vibe = answer
+L3 trip-vibe = answer
 T3 I | Got it — Vessa Quillon on the title line, and that vibe recorded as you said it.\n\nSecond ⭐ field, on dates: what travel windows actually work for you?
-L4 put=Dates & availability › Can travel kind=ask example=no carries=«Vessa Quillon on the title line, and that vibe recorded as you said it»
+L4 put=can-travel kind=ask example=no carries=«Vessa Quillon on the title line, and that vibe recorded as you said it»
 T4 P | Any time from late September to mid October.
-L3 Dates & availability › Can travel = answer
+L3 can-travel = answer
 T5 I | Third and last ⭐ field — a desire: what's one thing you want out of this trip? One line is a complete first pass here; you can sharpen it later.
-L4 put=Desires — what you want › Desire#1 kind=ask example=no
+L4 put=desire#1 kind=ask example=no
 T6 P | Long slow breakfasts somewhere with a view.
-L3 Desires — what you want › Desire#1 = thin
+L3 desire#1 = thin
 T7 I | Two more on that one:\n\n1. **Priority tier** — exactly one of: "anchor" (you'd be genuinely disappointed to miss it), "wish" (a real want to try hard for, but it can yield), or "nice-to-have" (a bonus — lovely if it fits, no loss if it doesn't).\n2. **Recurrence** — is this a one-off, a single occasion somewhere in the trip, or something you want every day you're there? Closed to "one-off" or "daily".
-L4 put=Desires — what you want › Priority tier#1,Desires — what you want › Recurrence#1 kind=ask example=no carries=«anchor (you'd be genuinely disappointed to miss it), wish (a real want to try hard for, but it can yield), nice-to-have (a bonus — lovely if it fits, no loss if it doesn't), one-off, daily»
+L4 put=desire-priority-tier#1,desire-recurrence#1 kind=ask example=no carries=«anchor (you'd be genuinely disappointed to miss it), wish (a real want to try hard for, but it can yield), nice-to-have (a bonus — lovely if it fits, no loss if it doesn't), one-off, daily»
 T8 P | Anchor. Daily.
-L3 Desires — what you want › Priority tier#1 = answer
-L3 Desires — what you want › Recurrence#1 = answer
+L3 desire-priority-tier#1 = answer
+L3 desire-recurrence#1 = answer
 T9 I | Last one on that desire — **Theme tag(s)**, optional: a word or two grouping it by kind? Skip if none come to mind.
-L4 put=Desires — what you want › Theme tag(s)#1 kind=ask example=no
+L4 put=desire-theme-tags#1 kind=ask example=no
 T10 P | Slow mornings and food.
-L3 Desires — what you want › Theme tag(s)#1 = answer
+L3 desire-theme-tags#1 = answer
 T11 I | That's all three ⭐ fields done.\n\nWhat's left: **About you** (relationship, anyone travelling with you who won't fill in their own form), the rest of **Dates & availability** (blackout dates, trip length), **Getting there & back**, **Where you stay**, more **Desires** if you have them, **Interests & tastes**, **People dynamics & togetherness**, and **Anything else**.\n\nThree ways to go, any of them a complete answer:\n\n1. **Keep going** — I'll pick up at About you and work through in order.\n2. **Stop here** — I hand back the form as it stands, with the ⭐ fields filled.\n3. **Go to a named section** — tell me which one and we'll start there.
 L4 put=- kind=decision point example=no
 T12 P | Keep going, please.
 L3 - = answer
 T13 I | On to **About you** — two questions:\n\n1. **Party:** Is anyone travelling with you who won't fill in their own form — kids and their ages, a partner who isn't doing this? Skip if everyone in your group is filling one in.\n2. **Relationship:** This only matters if the rest of the group wouldn't already know who you are — how you fit in the group. Skip if it doesn't apply.
-L4 put=About you › Relationship,About you › Party kind=ask example=yes example-text=«kids and their ages, a partner who isn't doing this»
+L4 put=relationship,party kind=ask example=yes example-text=«kids and their ages, a partner who isn't doing this»
 T14 P | I'm a friend of Teodora's — we sang in the same choir for years. Nobody else — just me.
-L3 About you › Relationship = answer
-L3 About you › Party = answer
+L3 relationship = answer
+L3 party = answer
 T15 I | Recorded — **Relationship** in your words, and **Party** as not applying (em dash).\n\nBack to **Dates & availability** for the two remaining lines:\n\n1. **Blackout:** Any dates you absolutely can't do? Skip if none.\n2. **Trip length:** How long feels right? Skip if you're open.
-L4 put=Dates & availability › Blackout,Dates & availability › Trip length kind=ask example=no carries=«Relationship in your words, Party as not applying (em dash)»
+L4 put=blackout,trip-length kind=ask example=no carries=«Relationship in your words, Party as not applying (em dash)»
 T16 P | Not the second week of October — I'm moving flats then. About a week.
-L3 Dates & availability › Blackout = answer
-L3 Dates & availability › Trip length = thin
+L3 blackout = answer
+L3 trip-length = thin
 T17 I | Next, **Getting there & back** — one line: when would you arrive and when would you head home, even if nothing's booked? If you'll just be on whatever the group books, say so and I'll record that.
-L4 put=Getting there & back › Arrive / leave kind=ask example=no carries=«on whatever the group books»
+L4 put=arrive-leave kind=ask example=no carries=«on whatever the group books»
 T18 P | I'd fly in a day before everyone and leave with the group.
-L3 Getting there & back › Arrive / leave = answer
+L3 arrive-leave = answer
 T19 I | **Where you stay** — one line: would you want your own room, are you happy sharing, and with whom? Skip if you'd rather not say or don't know the group yet.
-L4 put=Where you stay › Rooming kind=ask example=no carries=«your own room, happy sharing, and with whom»
+L4 put=rooming kind=ask example=no carries=«your own room, happy sharing, and with whom»
 T20 P | My own room, ideally, but I'd share with Teodora if it saves a lot.
-L3 Where you stay › Rooming = answer
+L3 rooming = answer
 T21 I | Recorded.\n\nOne thing worth saying out loud before we go on, because this form deliberately doesn't ask it: **must-haves** — a heat ceiling, a mobility limit, an allergy, a rest floor — have no section here, and that's not something I should paper over. There are two places they go:\n\n- A durable fact about you, true from one trip to the next, goes in your **person profile**, `templates/person-intake.template.md`. That can be filled in at any time, before or after this one — there's no order to get right.\n- Something that has to be worked around **for this trip alone** goes in the trip's own `trip-context.md`, under `## Hard Constraints` or `## Dietary & Health`.\n\nIf you mention one to me here, I'll point you at the right one rather than record it — it can't be planned around from this form.\n\nNow, back to **Desires**. You have one anchor down. Is there a second thing you want out of this trip?
-L4 put=Desires — what you want › Desire#2 kind=ask example=no
+L4 put=desire#2 kind=ask example=no
 T22 P | A day out on a boat.
-L3 Desires — what you want › Desire#2 = answer
+L3 desire#2 = answer
 T23 I | Same two for that one:\n\n1. **Priority tier** — "anchor", "wish", or "nice-to-have"?\n2. **Recurrence** — "one-off" or "daily"?
-L4 put=Desires — what you want › Priority tier#2,Desires — what you want › Recurrence#2 kind=ask example=no carries=«anchor, wish, nice-to-have, one-off, daily»
+L4 put=desire-priority-tier#2,desire-recurrence#2 kind=ask example=no carries=«anchor, wish, nice-to-have, one-off, daily»
 T24 P | Wish. One-off.
-L3 Desires — what you want › Priority tier#2 = answer
-L3 Desires — what you want › Recurrence#2 = answer
+L3 desire-priority-tier#2 = answer
+L3 desire-recurrence#2 = answer
 T25 I | Last on that one — **Theme tag(s)**, optional: a word or two grouping it by kind?
-L4 put=Desires — what you want › Theme tag(s)#2 kind=ask example=no
+L4 put=desire-theme-tags#2 kind=ask example=no
 T26 P | Water.
-L3 Desires — what you want › Theme tag(s)#2 = answer
+L3 desire-theme-tags#2 = answer
 T27 I | A third thing you want, or shall we move on?
-L4 put=Desires — what you want › Desire#3 kind=ask example=no
+L4 put=desire#3 kind=ask example=no
 T28 P | No third one — two is plenty.
-L3 Desires — what you want › Desire#3 = decline
+L3 desire#3 = decline
 T29 I | Noted — the third desire block comes back with em dashes on its lines.\n\n**Interests & tastes** depends on one thing I don't have yet: is the destination actually decided for this trip? If it isn't, I skip both lines here.
 L4 put=- kind=disclosure example=no carries=«the third desire block comes back with em dashes on its lines»
 T30 P | Once, about six years ago, for a weekend. I've seen the old fort and the cathedral, so not those again.
-L3 Interests & tastes › Been here before? = answer
-L3 Interests & tastes › Already done = answer
+L3 been-here-before = answer
+L3 already-done = answer
 T31 I | Both recorded as you said them.\n\n**People dynamics & togetherness** — three short ones:\n\n1. **Group time:** how much of the trip as a group? Suggestions from the form: "Mostly together", "Some solo or sub-group time", "Lots of independent time" — or your own words.\n2. **Split off with:** anyone you'd especially enjoy peeling off with?\n3. **Whole-group moments:** anything you want everyone there for?
-L4 put=People dynamics & togetherness › Group time,People dynamics & togetherness › Split off with,People dynamics & togetherness › Whole-group moments kind=ask example=no carries=«Mostly together, Some solo or sub-group time, Lots of independent time»
+L4 put=group-time,split-off-with,whole-group-moments kind=ask example=no carries=«Mostly together, Some solo or sub-group time, Lots of independent time»
 T32 P | Some solo time — I like a few hours on my own. Teodora, for the markets. The first dinner and the boat day.
-L3 People dynamics & togetherness › Group time = answer
-L3 People dynamics & togetherness › Split off with = answer
-L3 People dynamics & togetherness › Whole-group moments = answer
+L3 group-time = answer
+L3 split-off-with = answer
+L3 whole-group-moments = answer
 T33 I | **Anything else** — last two:\n\n1. **Special occasion?:** is the trip marking anything — a birthday, an anniversary, a milestone? Skip if it's just a trip.\n2. Anything else worth knowing — a quirk, a hope, a worry, a "by the way"? Leave it blank if nothing comes to mind.
-L4 put=Anything else › Special occasion? kind=ask example=yes example-text=«a birthday, an anniversary, a milestone»
+L4 put=special-occasion kind=ask example=yes example-text=«a birthday, an anniversary, a milestone»
 T34 P | It's Teodora's fortieth, on the Saturday. I'm happy to book one of the dinners myself.
-L3 Anything else › Special occasion? = answer
+L3 special-occasion = answer
 T35 I | ~~~\n---\nartifact: travelers/<traveler>.md\nschema-version: 1\ntrip: <trip-slug>\nwriter: human\nlifecycle: persist-mutable\nprovenance: human\npublish: internal\n---\n\n# Your Travel Profile — Vessa Quillon\n\n> **This is *your* profile** — what you'd love out of the trip and how you like to\n> travel. One file per person.\n>\n> **The fence above is not a field you fill in.** Replace `<trip-slug>` with the trip's\n> directory name and leave the rest exactly as it stands. **Your name does not go in it** —\n> it goes in the title line below, and nowhere in the fence. Field shapes and permitted\n> values: `reference/data-architecture.md` → "Universal frontmatter".\n>\n> **If you already have a durable person profile, add one line to the fence** —\n> `person: psn-<your token>` — so this trip picks up the answers you have already given\n> once. If you do not have one, leave the fence exactly as it stands: it is optional, and\n> a profile without it is complete.\n>\n> **Short on time? Fill the ⭐ fields first — about 2–3 minutes.** There are three of them,\n> at most one in a section, and most are a pick-from-the-list or a short phrase. The one\n> that asks you to think — a desire — says so on the line: one line is a complete first\n> pass there. Nothing here is compulsory: fill what fits where your trip is right now and\n> come back for the rest.\n>\n> **How to use it:**\n> - Copy this template to `trips/<destination>-<year>/travelers/<your-name>.md`, then\n>   fill it in — or just ask, and an agent will walk you through it question by question.\n>   For `<your-name>`, take your name as the trip's Group roster spells it, lowercase it,\n>   replace every run of characters outside `A-Za-z0-9._-` with a single `-`, and trim any\n>   leading or trailing `-` — so Dana Smith saves as `dana-smith.md`. **That stem is how the\n>   planner joins your file to your roster entry**, so a name it cannot match reads as an\n>   unresolved profile rather than as yours.\n> - **This file itself is never published.** It lives under `trips/` in your data folder, so\n>   put your real details here. It shapes the trip's plan, and the plan can be published as the\n>   trip's **private site**. The private site is encrypted: it opens for whoever holds the\n>   trip's passphrase, which your organizer gives the group, so anyone it is passed on to can\n>   open it.\n> - **The site may show the group** who is coming, your destination leanings, your dates and\n>   when you arrive and leave, your rooming, and your interests and tastes. Your other answers\n>   shape the plan too, and the plan on the site can reflect them and say whose need or wish a\n>   step serves — a rest stop, or who heads off together on a free afternoon.\n> - **A change reaches the site when your organizer next re-plans the trip and republishes\n>   it.** Earlier versions of the site, and any copy someone saved, keep what they showed.\n> - **Your organizer can also publish the plan as an open page that anyone can read.** That is\n>   their own deliberate step.\n> - **Fill in the parts that fit where your trip is right now.** If the destination\n>   isn't picked yet, the "Destination leanings" section matters most; if dates and a\n>   hotel are already booked, you can skip it. A few lines is fine; a lot is fine too.\n> - Every question has a short example and a "skip if it doesn't apply." Replace each\n>   `[bracketed placeholder]` with your own answer. If a question doesn't apply to you,\n>   keep the line and put a single em dash (`—`) where the answer would go. **Don't leave\n>   the placeholder text sitting there** — a leftover `[bracketed placeholder]` reads as\n>   *unanswered*, exactly like an empty line, and a profile still carrying its brackets\n>   reads as one nobody has filled in yet.\n> - A bracket that opens with `closed:` lists every answer that question takes; one that\n>   opens with `open:` lists suggestions, and an answer of your own is just as good. That\n>   opening word is a note to you, not part of your answer — replace the whole bracket\n>   either way. Skipping works exactly as it does everywhere else.\n> - For the repeatable desire blocks, **add as many as you like and delete the rest.**\n>\n> **Two things are worth keeping straight as you go:**\n> - Your **needs** are non-negotiable — the boundary the plan has to stay inside (a heat\n>   ceiling, a mobility limit, an allergy, a rest floor). A plan that breaks a need is broken.\n>   **This form does not ask for them.** A need is a durable fact about you rather than about\n>   one trip, so it lives in your person profile — `templates/person-intake.template.md`,\n>   which you can fill at any time, before or after this. Something that has to be worked\n>   around for **this trip alone** goes in the trip's own `trip-context.md`, under\n>   `## Hard Constraints` or `## Dietary & Health`.\n> - Your **desires** are what you *want* — the plan tries hard to land them inside the\n>   bounds your needs set. A missed desire is a worse trip, not a broken one.\n>\n> Everything here is *your individual view*. The planner takes everyone's profiles and\n> works out the group plan — any actual splits, side-trips, or trade-offs are decided\n> there, not written here.\n>\n> Placeholders only in this template — no real personal data in the template file itself.\n>\n> **The `intake-form` block below is not a field you fill in.** It tells the engine what this\n> form asks, and in a finished profile it only notes which form was filled in. Leave it\n> exactly as it stands.\n\n```intake-form\nform: templates/traveler-intake.template.md\nform-version: 1\nwriter: human\nboundary: <!-- PROFILE-END -->\nclassification: reference/data-model.md § Field Scope → The classification\noutput: travelers/<traveler>.md\n```\n\n---\n\n## About you\n\n> Just so the plan knows whose profile this is. The trip's Group roster holds the\n> full list — here you only add anyone travelling with you who won't fill in a\n> form of their own.\n\n- **Relationship:** I'm a friend of Teodora's — we sang in the same choir for years.\n- **Party:** —\n\n---\n\n## Destination leanings\n\n> *For when no destination is fixed yet.* Where would you love to go — and where would\n> you rather not? Skip this whole section once the destination is already decided.\n\n- ⭐ **Trip vibe:** A mix — mostly city, with some time by the water.\n\n> This is *your* wishlist for this trip. The planner gathers everyone's leanings into a\n> group shortlist — you're not picking the destination here, just saying what you're after.\n\n---\n\n## Dates & availability\n\n> When can you actually travel? Skip the parts that don't apply.\n\n- ⭐ **Can travel:** Any time from late September to mid October.\n- **Blackout:** Not the second week of October — I'm moving flats then.\n- **Trip length:** About a week.\n\n> Once the trip's dates are set, this links to the trip's logistics — it doesn't\n> override them, it just tells the planner what works for you.\n\n---\n\n## Getting there & back\n\n> When you'd get there and when you'd head home. Where you set out from and what a long\n> travel day does to you are durable answers — they live in your person profile.\n\n- **Arrive / leave:** I'd fly in a day before everyone and leave with the group.\n\n> This refines the trip's Logistics — it doesn't set it. When you arrive and leave tells\n> the planner what your own journey looks like; the booked flights stay in the trip's own\n> file.\n\n---\n\n## Where you stay\n\n> Who you're sleeping near. Skip the line if the lodging is already booked or you\n> genuinely don't mind. What kind of place you like is a durable answer and lives in your\n> person profile.\n\n- **Rooming:** My own room, ideally, but I'd share with Teodora if it saves a lot.\n\n> This refines the trip's Accommodation — it doesn't choose it. The property, the\n> booking, and the room list stay in the trip's own file.\n\n---\n\n## Desires — what you want\n\n> What would make this a great trip *for you*? The want-to-do, the would-love-to-see,\n> the kind of day you're hoping for. Unlike a need, a desire is yours alone — and you\n> tag each one with **how much it matters** so the plan knows what to protect.\n>\n> **Stuck? Start from an archetype.** These are the shapes a desire usually takes — pick\n> the ones that sound like your trip, then make each one specific to you:\n>\n> `a signature meal` · `a slow morning` · `a market wander` · `a big view` ·\n> `a museum or gallery` · `live music` · `a day trip out of town` · `time on the water` ·\n> `a neighbourhood to just walk` · `something active` ·\n> `a local ritual (bath, café, sauna)` · `one splurge experience` · `a night out` ·\n> `a quiet hour in nature` · `a hands-on thing (class, workshop, market tour)`\n>\n> The archetype wording also makes a good **Theme tag** — reusing it helps the planner\n> spot where the group already agrees.\n>\n> **Add an entry for each thing you want, and delete the rest.** Fill in the **Desire**\n> and pick exactly one **Priority tier** — think of it as how much it matters, not a number —\n> and say whether it is a one-off or something you want **every day**:\n\n- ⭐ **Desire:** Long slow breakfasts somewhere with a view.\n- **Priority tier:** anchor\n- **Recurrence:** daily\n- **Theme tag(s):** Slow mornings and food.\n- **Overlap:** [*(leave blank)* — the planner works out who else shares this; you don't fill it in. If you happen to know someone shares it, you can note who you *think* does, but the real answer is computed.]\n\n- **Desire:** A day out on a boat.\n- **Priority tier:** wish\n- **Recurrence:** one-off\n- **Theme tag(s):** Water.\n- **Overlap:** [*(leave blank — the planner computes it)*]\n\n- **Desire:** —\n- **Priority tier:** —\n- **Recurrence:** —\n- **Theme tag(s):** —\n- **Overlap:** [*(leave blank — the planner computes it)*]\n\n> Add as many desires as you like; delete the spares. There's no trip-level "desire" —\n> these are yours alone. Priority tier is a "how much it matters" label, not a score; nothing\n> optimizes against it.\n\n---\n\n## Interests & tastes\n\n>  How well you already know this destination — a soft signal that helps shape what gets\n> picked. Skip either line if it doesn't apply.\n\n- **Been here before?:** Once, about six years ago, for a weekend.\n- **Already done:** I've seen the old fort and the cathedral, so not those again.\n\n> This is about *this destination*, not your tastes in general — those live in your person\n> profile. It informs selection; it's broader and looser than the ranked Desires above.\n\n---\n\n## People dynamics & togetherness\n\n> How much together-time versus own-time feels right to you. This helps the planner give\n> everyone their own space without anyone feeling dragged along or left out. It's *your\n> individual view* — the planner decides any actual splits. Skip any line that doesn't apply.\n\n- **Group time:** Some solo time — I like a few hours on my own.\n- **Split off with:** Teodora, for the markets.\n- **Whole-group moments:** The first dinner and the boat day.\n\n---\n\n## Anything else\n\n> Anything the questions above didn't capture? One quick prompt, then free text —\n> say it however you like, or leave it blank.\n\n- **Special occasion?:** It's Teodora's fortieth, on the Saturday.\n\nI'm happy to book one of the dinners myself.\n\n---\n~~~\n\nSend that block back to whoever sent you this form — saving it is their step, not yours.
 L4 put=- kind=give-back example=no carries=«Vessa Quillon, I'm a friend of Teodora's — we sang in the same choir for years., A mix — mostly city, with some time by the water., Any time from late September to mid October., Not the second week of October — I'm moving flats then., About a week., I'd fly in a day before everyone and leave with the group., My own room, ideally, but I'd share with Teodora if it saves a lot., Long slow breakfasts somewhere with a view., anchor, daily, Slow mornings and food., A day out on a boat., wish, one-off, Water., Once, about six years ago, for a weekend., I've seen the old fort and the cathedral, so not those again., Some solo time — I like a few hours on my own., Teodora, for the markets., The first dinner and the boat day., It's Teodora's fortieth, on the Saturday., I'm happy to book one of the dinners myself.»
 --- record
-V About you › Relationship = I'm a friend of Teodora's — we sang in the same choir for years.
-V About you › Party = —
-V Destination leanings › Trip vibe = A mix — mostly city, with some time by the water.
-V Dates & availability › Can travel = Any time from late September to mid October.
-V Dates & availability › Blackout = Not the second week of October — I'm moving flats then.
-V Dates & availability › Trip length = About a week.
-V Getting there & back › Arrive / leave = I'd fly in a day before everyone and leave with the group.
-V Where you stay › Rooming = My own room, ideally, but I'd share with Teodora if it saves a lot.
-V Desires — what you want › Desire#1 = Long slow breakfasts somewhere with a view.
-V Desires — what you want › Priority tier#1 = anchor
-V Desires — what you want › Recurrence#1 = daily
-V Desires — what you want › Theme tag(s)#1 = Slow mornings and food.
-V Desires — what you want › Overlap#1 = [*(leave blank)* — the planner works out who else shares this; you don't fill it in. If you happen to know someone shares it, you can note who you *think* does, but the real answer is computed.]
-V Desires — what you want › Desire#2 = A day out on a boat.
-V Desires — what you want › Priority tier#2 = wish
-V Desires — what you want › Recurrence#2 = one-off
-V Desires — what you want › Theme tag(s)#2 = Water.
-V Desires — what you want › Overlap#2 = [*(leave blank — the planner computes it)*]
-V Desires — what you want › Desire#3 = —
-V Desires — what you want › Priority tier#3 = —
-V Desires — what you want › Recurrence#3 = —
-V Desires — what you want › Theme tag(s)#3 = —
-V Desires — what you want › Overlap#3 = [*(leave blank — the planner computes it)*]
-V Interests & tastes › Been here before? = Once, about six years ago, for a weekend.
-V Interests & tastes › Already done = I've seen the old fort and the cathedral, so not those again.
-V People dynamics & togetherness › Group time = Some solo time — I like a few hours on my own.
-V People dynamics & togetherness › Split off with = Teodora, for the markets.
-V People dynamics & togetherness › Whole-group moments = The first dinner and the boat day.
-V Anything else › Special occasion? = It's Teodora's fortieth, on the Saturday.
+V relationship = I'm a friend of Teodora's — we sang in the same choir for years.
+V party = —
+V trip-vibe = A mix — mostly city, with some time by the water.
+V can-travel = Any time from late September to mid October.
+V blackout = Not the second week of October — I'm moving flats then.
+V trip-length = About a week.
+V arrive-leave = I'd fly in a day before everyone and leave with the group.
+V rooming = My own room, ideally, but I'd share with Teodora if it saves a lot.
+V desire#1 = Long slow breakfasts somewhere with a view.
+V desire-priority-tier#1 = anchor
+V desire-recurrence#1 = daily
+V desire-theme-tags#1 = Slow mornings and food.
+V desire-overlap#1 = [*(leave blank)* — the planner works out who else shares this; you don't fill it in. If you happen to know someone shares it, you can note who you *think* does, but the real answer is computed.]
+V desire#2 = A day out on a boat.
+V desire-priority-tier#2 = wish
+V desire-recurrence#2 = one-off
+V desire-theme-tags#2 = Water.
+V desire-overlap#2 = [*(leave blank — the planner computes it)*]
+V desire#3 = —
+V desire-priority-tier#3 = —
+V desire-recurrence#3 = —
+V desire-theme-tags#3 = —
+V desire-overlap#3 = [*(leave blank — the planner computes it)*]
+V been-here-before = Once, about six years ago, for a weekend.
+V already-done = I've seen the old fort and the cathedral, so not those again.
+V group-time = Some solo time — I like a few hours on my own.
+V split-off-with = Teodora, for the markets.
+V whole-group-moments = The first dinner and the boat day.
+V special-occasion = It's Teodora's fortieth, on the Saturday.

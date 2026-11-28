@@ -9,13 +9,13 @@ style: none
 traveller: TE — terse, an invented traveller
 answered-before: none
 T1 I | When can you travel, and how long feels right?
-L4 put=Dates & availability › Can travel,Dates & availability › Trip length kind=ask example=no
+L4 put=can-travel,trip-length kind=ask example=no
 T2 P | Any weekend in May.
-L3 Dates & availability › Can travel = answer
+L3 can-travel = answer
 T3 I | And how long feels right?
-L4 put=Dates & availability › Trip length kind=ask example=no
+L4 put=trip-length kind=ask example=no
 T4 P | Three nights.
-L3 Dates & availability › Trip length = answer
+L3 trip-length = answer
 --- record
-V Dates & availability › Can travel = any weekend in May
-V Dates & availability › Trip length = three nights
+V can-travel = any weekend in May
+V trip-length = three nights

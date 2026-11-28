@@ -9,16 +9,16 @@ style: none
 traveller: TE — terse, an invented traveller
 answered-before: none
 T1 I | How do you feel about rooming?
-L4 put=Where you stay › Rooming kind=ask example=no
+L4 put=rooming kind=ask example=no
 T2 P | Own room.
-L3 Where you stay › Rooming = thin
+L3 rooming = thin
 T3 I | You said your own room — anything more on that?
-L4 put=Where you stay › Rooming kind=follow-up example=no carries=«own room»
+L4 put=rooming kind=follow-up example=no carries=«own room»
 T4 P | (silence)
-L3 Where you stay › Rooming = silence
+L3 rooming = silence
 T5 I | You can answer, skip it, or stop here.
-L4 put=Where you stay › Rooming kind=silence re-offer example=no
+L4 put=rooming kind=silence re-offer example=no
 T6 P | (silence)
-L3 Where you stay › Rooming = silence
+L3 rooming = silence
 --- record
-V Where you stay › Rooming = own room
+V rooming = own room

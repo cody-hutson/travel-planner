@@ -21,99 +21,99 @@ L4 put=- kind=disclosure example=no
 T2 P | Odile Brackwater.
 L3 - = answer
 T3 I | Thanks, Odile.\n\n**Getting there & back** — where do you usually set out from for a trip? (Skip if it changes from trip to trip.)
-L4 put=Getting there & back › Leaving from kind=ask example=no
+L4 put=leaving-from kind=ask example=no
 T4 P | Calderby.
-L3 Getting there & back › Leaving from = answer
+L3 leaving-from = answer
 T5 I | Got it — Calderby.\n\n**Where you stay** — the kind of place you're comfortable sleeping in: "Hotel", "rental", or "hostel"? Something of your own is just as good, and do say if anything's a must for you — a kitchen, a lift, quiet.
-L4 put=Where you stay › Lodging style kind=ask example=yes example-text=«a kitchen, a lift, quiet» carries=«Hotel, rental, hostel»
+L4 put=lodging-style kind=ask example=yes example-text=«a kitchen, a lift, quiet» carries=«Hotel, rental, hostel»
 T6 P | Small hotel.
-L3 Where you stay › Lodging style = answer
+L3 lodging-style = answer
 T7 I | **Budget appetite** — your day-to-day spend comfort: "keep it lean", "mid-range", or "spend freely"? Anything of your own is fine too.
-L4 put=Budget appetite › Comfort range kind=ask example=no carries=«keep it lean, mid-range, spend freely»
+L4 put=comfort-range kind=ask example=no carries=«keep it lean, mid-range, spend freely»
 T8 P | Mid-range.
-L3 Budget appetite › Comfort range = answer
+L3 comfort-range = answer
 T9 I | **Needs — the must-haves.** This is the one this record really exists for: anything a trip *has* to work around for you — a boundary a plan can't cross.\n\nTo show what counts, some kinds of thing people put here: heat, walking or stairs, food or allergies, rest, a spending ceiling, a fixed time, noise or crowds. Those are only examples, not a list to choose from — the answer is yours whether or not it names one of them. One line is a complete first pass, and the more specific the better.\n\nIf nothing is a hard must for you, say so and I'll write `none`.
-L4 put=Needs — the must-haves › Specific#1 kind=ask example=yes example-text=«heat, walking or stairs, food or allergies, rest, a spending ceiling, a fixed time, noise or crowds» carries=«none»
+L4 put=need-detail#1 kind=ask example=yes example-text=«heat, walking or stairs, food or allergies, rest, a spending ceiling, a fixed time, noise or crowds» carries=«none»
 T10 P | Afternoons off.
-L3 Needs — the must-haves › Specific#1 = thin
+L3 need-detail#1 = thin
 T11 I | Recorded as given: "Afternoons off."\n\nTo file it, which category fits best — "Heat", "Mobility", "Dietary-health", "Rest", "Budget cap", "Timing", "Sensory", or "Other"?
-L4 put=Needs — the must-haves › Category#1 kind=ask example=no carries=«Afternoons off., Heat, Mobility, Dietary-health, Rest, Budget cap, Timing, Sensory, Other»
+L4 put=need-category#1 kind=ask example=no carries=«Afternoons off., Heat, Mobility, Dietary-health, Rest, Budget cap, Timing, Sensory, Other»
 T12 P | Rest.
-L3 Needs — the must-haves › Category#1 = answer
+L3 need-category#1 = answer
 T13 I | **Travel style & pace** — how do you like a trip to feel day to day: "packed", "balanced", or "relaxed"? Your own words are fine.
-L4 put=Travel style & pace › Pace kind=ask example=no carries=«packed, balanced, relaxed»
+L4 put=pace kind=ask example=no carries=«packed, balanced, relaxed»
 T14 P | Relaxed.
-L3 Travel style & pace › Pace = answer
+L3 pace = answer
 T15 I | **Interests & tastes** — what sort of thing are you drawn to on a trip? Three or four is plenty, and it's an open question — whatever lands for you.
-L4 put=Interests & tastes › Interests kind=ask example=no
+L4 put=interests kind=ask example=no
 T16 P | History. Walking.
-L3 Interests & tastes › Interests = answer
+L3 interests = answer
 T17 I | That's all six starred fields done — the quick pass is complete.\n\nWhat's still open: **Destination leanings** (would love / rather skip), the rest of **Getting there & back** (journey comfort, passport), **Splurge appetite**, any **further needs** beyond the first, the rest of **Travel style & pace** (day rhythm, novelty vs comfort, planning style), **Cuisine appetite**, and **Solo, I'd** under People dynamics.\n\nThree ways to go, and any of them is a complete answer:\n\n1. **Keep going** — I'll pick up at Destination leanings and work through in order.\n2. **Stop here** — I'll hand back the form as it stands.\n3. **Go to a named section** — tell me which one and we'll start there.
 L4 put=- kind=decision point example=no
 T18 P | Keep going, please.
 L3 - = answer
 T19 I | **Destination leanings** — in general, across any trip:\n\n1. Where would you love to go?\n2. Anywhere you'd generally rather avoid?
-L4 put=Destination leanings › Would love,Destination leanings › Rather skip kind=ask example=no
+L4 put=would-love,rather-skip kind=ask example=no
 T20 P | Mountains. Big cities.
-L3 Destination leanings › Would love = thin
-L3 Destination leanings › Rather skip = answer
+L3 would-love = thin
+L3 rather-skip = answer
 T21 I | Just so these land on the right lines — is "Mountains" the would-love, and "Big cities" the rather-skip?
 L4 put=- kind=confirmation example=no carries=«Mountains, Big cities»
 T22 P | Yes, that's right.
 L3 - = answer
 T23 I | **Getting there & back**, the rest of it:\n\n1. **Journey comfort** — what can you take on a travel day, and how do you prefer to make the journey?\n2. **Passport** — for international trips only, the issuing country and the month it's valid through. Never the number, and yours alone, not anyone else's travelling with you. Skip it if your trips are domestic.
-L4 put=Getting there & back › Journey comfort,Getting there & back › Passport kind=ask example=no
+L4 put=journey-comfort,passport kind=ask example=no
 T24 P | Trains. Skip.
-L3 Getting there & back › Journey comfort = thin
-L3 Getting there & back › Passport = skip
+L3 journey-comfort = thin
+L3 passport = skip
 T25 I | Noted — passport line skipped.\n\n**Budget appetite** — what would you happily pay up for, versus stay lean on?
-L4 put=Budget appetite › Splurge appetite kind=ask example=no
+L4 put=splurge-appetite kind=ask example=no
 T26 P | Food.
-L3 Budget appetite › Splurge appetite = thin
+L3 splurge-appetite = thin
 T27 I | **Needs** — you've got one down ("Afternoons off", filed under Rest). Is there another must-have a trip would have to work around for you, or is that the one?
-L4 put=Needs — the must-haves › Specific#2 kind=ask example=no carries=«Afternoons off, Rest»
+L4 put=need-detail#2 kind=ask example=no carries=«Afternoons off, Rest»
 T28 P | No more.
-L3 Needs — the must-haves › Category#2 = decline
-L3 Needs — the must-haves › Specific#2 = decline
+L3 need-category#2 = decline
+L3 need-detail#2 = decline
 T29 I | **Travel style & pace**, the rest:\n\n1. **Day rhythm** — more a "morning" or an "evening" person? (Or skip if it varies.)\n2. **Novelty vs comfort** — how far do you like to stray from the familiar?\n3. **Planning style** — "planned" or "spontaneous"?
-L4 put=Travel style & pace › Day rhythm,Travel style & pace › Novelty vs comfort,Travel style & pace › Planning style kind=ask example=no carries=«morning, evening, planned, spontaneous»
+L4 put=day-rhythm,novelty-vs-comfort,planning-style kind=ask example=no carries=«morning, evening, planned, spontaneous»
 T30 P | Mornings. Meaning what? Planned.
-L3 Travel style & pace › Day rhythm = answer
-L3 Travel style & pace › Novelty vs comfort = request-clarify
-L3 Travel style & pace › Planning style = answer
+L3 day-rhythm = answer
+L3 novelty-vs-comfort = request-clarify
+L3 planning-style = answer
 T31 I | Mornings and planned, noted.\n\n**Novelty vs comfort** is about how adventurous you like a trip to be — whether you enjoy being somewhere unfamiliar and improvising, or would rather have a base and a routine you already know. There's no list to pick from; whatever you'd say in your own words, and skip it if you've no strong lean.
-L4 put=Travel style & pace › Novelty vs comfort kind=asked-for example=yes example-text=«whether you enjoy being somewhere unfamiliar and improvising, or would rather have a base and a routine you already know» carries=«Mornings and planned»
+L4 put=novelty-vs-comfort kind=asked-for example=yes example-text=«whether you enjoy being somewhere unfamiliar and improvising, or would rather have a base and a routine you already know» carries=«Mornings and planned»
 T32 P | Comfort, mostly.
-L3 Travel style & pace › Novelty vs comfort = answer
+L3 novelty-vs-comfort = answer
 T33 I | **Interests & tastes** — how do you eat when you travel: "adventurous", "familiar", or specific loves and avoids? Anything you steer clear of is worth saying.
-L4 put=Interests & tastes › Cuisine appetite kind=ask example=no carries=«adventurous, familiar, specific loves and avoids»
+L4 put=cuisine-appetite kind=ask example=no carries=«adventurous, familiar, specific loves and avoids»
 T34 P | Familiar.
-L3 Interests & tastes › Cuisine appetite = answer
+L3 cuisine-appetite = answer
 T35 I | **People dynamics & togetherness** — if you had some time to yourself on a trip, what would you love to do with it?
-L4 put=«People dynamics & togetherness › Solo, I'd» kind=ask example=no
+L4 put=solo kind=ask example=no
 T36 P | Read.
-L3 People dynamics & togetherness › Solo, I'd = thin
+L3 solo = thin
 T37 I | ~~~\n---\nartifact: people/<person>.md\nschema-version: 1\ntrip: cross-trip\nwriter: human\nlifecycle: persist-mutable\nprovenance: human\npublish: internal-hard\n---\n\n# Odile Brackwater\n\n> **This is *your* durable profile** — the answers about you that stay the same from one\n> trip to the next. One file per person, written once and pointed at by every trip, so you\n> never fill them in twice.\n>\n> **The fence above is not a field you fill in.** Leave it exactly as it stands, including\n> `trip: cross-trip` — that value says this record belongs to no single trip. **Your name\n> does not go in it** — it goes in the title line above, replacing `[Name]`, and nowhere in\n> the fence. Field shapes and permitted values: `reference/data-architecture.md` →\n> "Universal frontmatter".\n>\n> **Your name is the one thing this record cannot do without.** The title line is the\n> display name and nothing else — not a decorated heading — because it is what a duplicate\n> record is checked against.\n>\n> **Short on time? Fill the ⭐ fields first — about 2–3 minutes.** There are six of them,\n> at most one in a section, and most are a pick-from-the-list or a short phrase. The one\n> that asks you to think — a must-have — says so on the line: one line is a complete first\n> pass there. Nothing here is compulsory, and you can come back for the rest.\n>\n> **How to use it:**\n> - Copy this template to `people/psn-<token>.md`, then fill it in — or just ask, and an\n>   agent will walk you through it question by question. `<token>` is four hex characters\n>   minted once for you: **the filename carries your id, the title line carries your name.**\n> - **This record itself is never published.** It lives in the `people/` store of your data\n>   folder, so put your real details here. It shapes each trip's plan, and a plan can be published\n>   as its trip's **private site**. The private site is encrypted: it opens for whoever holds that\n>   trip's passphrase, which the organizer gives the group, so anyone it is passed on to can open\n>   it.\n> - **A trip's site may show its group** your destination leanings, where you set out from, how\n>   you like to travel there, the kind of place you sleep in, your interests and tastes, and your\n>   pace and day rhythm. Your other answers shape the plan too, and the plan on the site can\n>   reflect them and say whose need or wish a step serves — a rest stop, or a step-free route.\n>   The passport line is handled differently, as the note under it says.\n> - **A change reaches a site when its organizer next re-plans that trip and republishes it.**\n>   Earlier versions of the site, and any copy someone saved, keep what they showed.\n> - **An organizer can also publish a plan as an open page that anyone can read.** That is\n>   their own deliberate step.\n> - **This record is used by every trip and is never trip-specific.** Anything true of only\n>   one trip — your dates, what you want to do there, who you are rooming with — belongs on\n>   that trip's own form, `templates/traveler-intake.template.md`, not here.\n> - A trip picks this record up through a single `person:` line in that trip form's fence.\n>   You can write this record before your first trip, between trips, or years after — there\n>   is no order to get right.\n> - Every question has a short example and a "skip if it doesn't apply." Replace each\n>   `[bracketed placeholder]` with your own answer. If a question doesn't apply to you,\n>   keep the line and put a single em dash (`—`) where the answer would go. **Don't leave\n>   the placeholder text sitting there** — a leftover `[bracketed placeholder]` reads as\n>   *unanswered*, exactly like an empty line, and a profile still carrying its brackets\n>   reads as one nobody has filled in yet.\n> - A bracket that opens with `closed:` lists every answer that question takes; one that\n>   opens with `open:` lists suggestions, and an answer of your own is just as good. That\n>   opening word is a note to you, not part of your answer — replace the whole bracket\n>   either way. Skipping works exactly as it does everywhere else, and so does `none` for\n>   the needs below.\n> - For the repeatable need blocks, **add as many as you like and delete the rest.**\n>\n> **Your needs are why this file is worth keeping.** A need is non-negotiable — the boundary\n> a plan has to stay inside (a heat ceiling, a mobility limit, an allergy, a rest floor). A\n> plan that breaks a need is broken. A need is also the answer least likely to change\n> between trips, which is exactly why it is written here once instead of retyped every time.\n> What you *want* out of a particular trip is a **desire**, and desires are asked for on the\n> trip form, not here.\n>\n> Placeholders only in this template — no real personal data in the template file itself.\n>\n> **The `intake-form` block below is not a field you fill in.** It tells the engine what this\n> form asks, and in a finished record it only notes which form was filled in. Leave it\n> exactly as it stands.\n\n```intake-form\nform: templates/person-intake.template.md\nform-version: 1\nwriter: human\nboundary: <!-- PROFILE-END -->\nclassification: reference/data-model.md § Field Scope → The classification\noutput: people/<person>.md\n```\n\n---\n\n## Destination leanings\n\n> Where you'd love to go, and where you'd rather not — in general, across any trip. A trip\n> that has already picked its destination simply doesn't read these.\n\n- **Would love:** Mountains.\n- **Rather skip:** Big cities.\n\n> These are *your* standing leanings. When a trip is still choosing, the planner gathers\n> everyone's into a group shortlist — you're not picking a destination here.\n\n---\n\n## Getting there & back\n\n> Your side of any journey — where you set out from, and what a long travel day does to\n> you. Skip anything that doesn't apply to you.\n\n- ⭐ **Leaving from:** Calderby.\n- **Journey comfort:** Trains.\n- **Passport:** —\n\n> These refine a trip's Logistics — they never set them. Your usual origin tells the planner\n> where your journey starts; the booked flights stay in each trip's own file. The passport\n> line exists only so a trip's entry requirements can be checked against your nationality\n> and your document's dates — which is why it never needs a number, and why it covers\n> exactly one person: you. **Never put a second person's passport on yours.** Anyone else\n> whose entry requirements need checking has a record of their own, and their passport goes\n> on their own line there. This line is a **declared non-publishable field** — its class is\n> declared in `reference/data-architecture.md` § *Publishability*. The planning agents the\n> organizer dispatches to write what a trip's site is built from are given your answers with\n> this line taken out, and an open publish is refused while a page repeats it.\n\n---\n\n## Where you stay\n\n> The kind of place you're comfortable sleeping in. Who you share a room with is a\n> per-trip answer and is asked on the trip form instead.\n\n- ⭐ **Lodging style:** Small hotel.\n\n> This refines a trip's Accommodation — it doesn't choose it. The property, the booking, and\n> the room list stay in each trip's own file.\n\n---\n\n## Budget appetite\n\n> How you like to spend on a trip — your personal lean. Skip either part if you'd\n> rather not say.\n\n- ⭐ **Comfort range:** Mid-range.\n- **Splurge appetite:** Food.\n\n> This is *your* personal lean. It refines — it doesn't replace — the trip-level budget\n> the group sets together.\n\n---\n\n## Needs — the must-haves\n\n> **Anything a trip MUST accommodate for you?** These are the non-negotiables — the\n> boundaries a plan has to stay inside. Write *your* specific detail: the *how much* and the\n> *what exactly*. You are not linking it to anything here. Each trip has its own rules (a\n> heat ceiling, a mobility limit, an allergy), and an agent is the one that points your need\n> at the matching rule when it reads this record — you never write that link yourself.\n>\n> **Add a block for each need you have, and delete the rest.** If you have a real need no\n> trip has captured as a rule yet (say, a rest floor), still write it here — an agent flags\n> it so it can be added. Pick the closest **Category** for each:\n> Heat / Mobility / Dietary-health / Rest / Budget cap / Timing / Sensory / Other.\n>\n> **If you have no must-haves at all, write `none`** rather than leaving it blank — blank\n> reads as *not answered yet*, and the planner treats an unanswered need as unknown, never\n> as none. **This is the one place `none` is used instead of the em dash**: everywhere else\n> an em dash means "no answer", but for needs the difference between *"I have none"* and\n> *"not asked yet"* is load-bearing, so say it in words.\n\n- **Category:** Rest\n- ⭐ **Specific:** Afternoons off.\n\n- **Category:** none\n- **Specific:** none\n\n- **Category:** none\n- **Specific:** none\n\n> Add as many need blocks as you like; delete the spares. Each need is exactly one Category.\n> A need is non-negotiable — if it's more of a "would be nice," it is a desire, and desires\n> are asked for on a trip's own form.\n\n---\n\n## Travel style & pace\n\n> How you like a trip to *feel*, day to day. Skip any line that doesn't fit.\n\n- ⭐ **Pace:** Relaxed.\n- **Day rhythm:** Mornings.\n- **Novelty vs comfort:** Comfort, mostly.\n- **Planning style:** Planned.\n\n---\n\n## Interests & tastes\n\n> The broad stuff you're drawn to — a soft signal that helps shape what gets picked on any\n> trip. Skip either line if nothing stands out.\n>\n> **Tick what sparks.** Scan the list and copy across the ones that land — add anything\n> that's missing. Three or four is plenty; there's no right number.\n>\n> `museums` · `history` · `art & design` · `architecture` · `nature & hiking` ·\n> `beaches & water` · `food & markets` · `coffee & cafés` · `bars & nightlife` ·\n> `live music` · `shopping` · `sport` · `photography` · `walking a neighbourhood` ·\n> `festivals & events` · `spa & wellness`\n\n- ⭐ **Interests:** History. Walking.\n- **Cuisine appetite:** Familiar.\n\n> This is a soft signal that informs selection. Whether you have been to a *particular*\n> destination before, and what you already did there, are per-trip answers and are asked on\n> the trip form.\n\n---\n\n## People dynamics & togetherness\n\n> What you'd do with time to yourself. How much together-time you want on a given trip is a\n> per-trip answer and is asked on the trip form.\n\n- **Solo, I'd:** Read.\n\n---\n~~~
 L4 put=- kind=give-back example=no carries=«Odile Brackwater, Mountains., Big cities., Calderby., Trains., —, Small hotel., Mid-range., Food., Rest, Afternoons off., none, none, none, none, Relaxed., Mornings., Comfort, mostly., Planned., History. Walking., Familiar., Read.»
 --- record
-V Destination leanings › Would love = Mountains.
-V Destination leanings › Rather skip = Big cities.
-V Getting there & back › Leaving from = Calderby.
-V Getting there & back › Journey comfort = Trains.
-V Getting there & back › Passport = —
-V Where you stay › Lodging style = Small hotel.
-V Budget appetite › Comfort range = Mid-range.
-V Budget appetite › Splurge appetite = Food.
-V Needs — the must-haves › Category#1 = Rest
-V Needs — the must-haves › Specific#1 = Afternoons off.
-V Needs — the must-haves › Category#2 = none
-V Needs — the must-haves › Specific#2 = none
-V Needs — the must-haves › Category#3 = none
-V Needs — the must-haves › Specific#3 = none
-V Travel style & pace › Pace = Relaxed.
-V Travel style & pace › Day rhythm = Mornings.
-V Travel style & pace › Novelty vs comfort = Comfort, mostly.
-V Travel style & pace › Planning style = Planned.
-V Interests & tastes › Interests = History. Walking.
-V Interests & tastes › Cuisine appetite = Familiar.
-V People dynamics & togetherness › Solo, I'd = Read.
+V would-love = Mountains.
+V rather-skip = Big cities.
+V leaving-from = Calderby.
+V journey-comfort = Trains.
+V passport = —
+V lodging-style = Small hotel.
+V comfort-range = Mid-range.
+V splurge-appetite = Food.
+V need-category#1 = Rest
+V need-detail#1 = Afternoons off.
+V need-category#2 = none
+V need-detail#2 = none
+V need-category#3 = none
+V need-detail#3 = none
+V pace = Relaxed.
+V day-rhythm = Mornings.
+V novelty-vs-comfort = Comfort, mostly.
+V planning-style = Planned.
+V interests = History. Walking.
+V cuisine-appetite = Familiar.
+V solo = Read.

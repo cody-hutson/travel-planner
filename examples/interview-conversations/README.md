@@ -36,9 +36,10 @@ A file is plain text, one physical line to a record: a header of `key: value` li
 turns — `T<n> I | …` for the interviewer and `T<n> P | …` for the person answering — each with the
 labels beneath it, then `--- record` and the values the conversation wrote, each `V <field> = <value>`,
 and the author's stated verdicts, each `X OW-C <field> = …` or `X FB-C <field> = …`. A field is named
-`<section> › <label>`, with `#<unit>` in a repeat block. The grammar, what each label means, and how
-each check reads them are stated in group `CF`'s banner in `scripts/test-artifact-schema.sh`, which
-pins them; this file cites them and does not restate them.
+by its key, the `Key` cell of its row in `reference/data-model.md` § *Field Scope*, with `#<unit>` in a
+repeat block. The grammar, what each label means, and how each check reads them are stated in group
+`CF`'s banner in `scripts/test-artifact-schema.sh`, which pins them; this file cites them and does not
+restate them.
 
 ## The set
 
