@@ -469,9 +469,10 @@
 #        marker sentences stand (OP-U1, OP-U2). Each arm with a must-fire control on a copy
 #   TW   the trip window's recompute: its standing rule stands once, verbatim from ADR-028 § 7 but
 #        for its number (TW1); the template declares each derived line's inputs, the arrival and
-#        departure lines' being § 3's own (TW2); and the write-ownership row, `fact`'s route and every
-#        citation beside the recompute name that rule (TW3). Text only, never behaviour. Each arm
-#        guards its population and has must-fire controls on a copy
+#        departure lines' being § 3's own, with the clauses that say how it reads them (TW2); and the
+#        write-ownership row, `fact`'s route and every citation beside the recompute name that rule
+#        (TW3). Text only, never behaviour. Each arm guards its population and has must-fire controls
+#        on a copy
 #   RS   the two rosters that DESCRIBE this suite — the coverage boundary in
 #        .github/workflows/artifact-schema.yml and THIS BLOCK — each set-diffed BOTH WAYS
 #        against the groups the run actually emitted. The executing set is taken from the RUN
@@ -35810,8 +35811,11 @@ fi
 #   TW1  the standing clause carries § 7's rule exactly once, verbatim but for its number, as rule
 #        2's fourth admitted shape, in a numbering that runs without a gap;
 #   TW2  the template's trip-window note declares each derived line's inputs by label, the arrival
-#        and departure lines' being § 3's own; every label resolves in the template; and the
-#        departure line carries no hotel clause (D-9);
+#        and departure lines' being § 3's own; every label resolves in the template; the departure
+#        line carries no hotel clause (D-9); and the note reads each leg value in the one shape the
+#        template's `Flight:` lines declare and each check time as a clock time, in a sentence of its
+#        own, computes the delta line only from annotations with an explicit UTC offset, and opens
+#        by saying the engine's template is read, never this copy;
 #   TW3  `CLAUDE.md` § Write ownership carries § 1's row with the number TW1 found; `fact`'s
 #        `[DERIVED]` route row names that rule; its cross-block table names no trip-window
 #        consequence; its `**Reads:**` line names the block and the template; and every citation of
@@ -35844,6 +35848,16 @@ tw_quote() {
 }
 # tw_norm — its input joined and whitespace-squeezed onto one line.
 tw_norm() { LC_ALL=C awk '{ s = s " " $0 } END { gsub(/[ \t]+/, " ", s); sub(/^ /, "", s); sub(/ $/, "", s); print s }'; }
+# tw_swap <file> <copy> <old> <new> — <copy> is <file> with its one occurrence of <old>, which may span
+# lines, replaced by <new>. Where <old> does not occur exactly once, <copy> is <file> unchanged, which a
+# control reads as a copy that differs in nothing.
+tw_swap() {
+  TW_OLD="$3" TW_NEW="$4" LC_ALL=C awk 'BEGIN { a = ENVIRON["TW_OLD"]; b = ENVIRON["TW_NEW"] }
+    { s = s $0 "\n" }
+    END { n = 0; t = s; while (a != "" && (p = index(t, a)) > 0) { n++; t = substr(t, p + length(a)) }
+      if (n == 1) { p = index(s, a); s = substr(s, 1, p - 1) b substr(s, p + length(a)) }
+      printf "%s", s }' "$1" > "$2"
+}
 
 # tw1_report <adr> <skill> — one line: <matches> <N> <gapless> <max> <third-at-7> <fourth-at-N>
 # <fourth-elsewhere> <rules> <§7-bytes>. A rule is a column-0 `<n>. ` line inside the standing clause
@@ -35942,18 +35956,31 @@ fi
 #   UNRES <entry> <label>       a label no line outside the block's quotes carries
 #   DEP <n> <hotel>             derived lines named `Departure day`, and how many of them say `hotel`
 #   ADR <line> <n> <labels>     ADR-028 § 3's arrival and departure bullets: found n times, their labels
+#   FLT <label> <shape>         a label a `Flight:` line of the template declares with a dated shape
+#   SHAPE <shapes> <sents> <dated>  the dated shapes FLT found; the sentences of the note, outside its
+#                               entries, that name every § 3 label FLT carries with that one shape and
+#                               every other § 3 label with `clock time`; and how many of those also say
+#                               how a derived line writes a date
+#   OFFSET <entries> <limited>  `Timezone delta` entries, and how many limit the line to annotations
+#                               that carry an explicit UTC offset
+#   SOURCE <sents> <both>       sentences of the note's opening, before its first entry, naming
+#                               `/trip-record`, and how many say it reads the engine's own template and
+#                               never this copy
 tw2_report() {
-  LC_ALL=C awk -v hd='### Effective Planning Days [DERIVED]' '
+  LC_ALL=C awk -v hd='### Effective Planning Days [DERIVED]' -v od='three-letter' -v uo='only where both annotations carry an explicit UTC offset' -v s1="the engine's own template" -v s2='never from this copy' '
     function labels(s,   o, t, seen) { o = ""; split("", seen); while (match(s, /`[^`]+`/)) { t = substr(s, RSTART + 1, RLENGTH - 2); s = substr(s, RSTART + RLENGTH); if (t ~ /:$/ && !(t in seen)) { seen[t] = 1; o = o (o == "" ? "" : ",") t } }; return o }
-    function flush() { if (en != "") { E[++ne] = en; EL[ne] = labels(et) }; en = ""; et = "" }
+    function sq(s) { gsub(/[ \t]+/, " ", s); sub(/^ /, "", s); sub(/ $/, "", s); return s }
+    function inl(list, k,   xa, m, i) { m = split(list, xa, ","); for (i = 1; i <= m; i++) if (xa[i] == k) return 1; return 0 }
+    function flush() { if (en != "") { E[++ne] = en; EL[ne] = labels(et); ET[ne] = sq(ec) }; en = ""; et = ""; ec = "" }
     FNR == NR {
       L[++nl] = $0
       if ($0 == hd) { heads++; if (!in_b) { in_b = 1; bs = nl }; next }
       if (in_b && /^#/) { in_b = 0; be = nl - 1; flush() }
       if (!in_b) next
-      if (index($0, "> - *") == 1 && index($0, "* ← ") > 0) { flush(); en = substr($0, 6); en = substr(en, 1, index(en, "*") - 1); et = $0; next }
-      if (en != "" && index($0, ">   ") == 1) { et = et " " $0; next }
+      if (index($0, "> - *") == 1 && index($0, "* ← ") > 0) { flush(); fe = 1; en = substr($0, 6); en = substr(en, 1, index(en, "*") - 1); et = $0; ec = substr($0, 3); next }
+      if (en != "" && index($0, ">   ") == 1) { et = et " " $0; c = $0; sub(/^>[ \t]*/, "", c); ec = ec " " c; next }
       if (en != "") flush()
+      if (substr($0, 1, 1) == ">") { c = $0; sub(/^> ?/, "", c); NT = NT " " c; if (!fe) LD = LD " " c; next }
       if (index($0, "- **") == 1) {
         s = substr($0, 5); p = index(s, ":**"); lab = substr(s, 1, p - 1); rest = substr(s, p + 4)
         if (substr(lab, 1, 1) == "[") { q = index(rest, " — "); r = index(rest, " ("); if (r > 0 && (q == 0 || r < q)) q = r; nm = (q > 0) ? substr(rest, 1, q - 1) : rest } else nm = lab
@@ -35975,6 +36002,33 @@ tw2_report() {
       }
       printf "DEP\t%d\t%d\n", dep + 0, hot + 0
       printf "ADR\tarrival\t%d\t%s\nADR\tdeparture\t%d\t%s\n", na + 0, al, nd3 + 0, dl
+      bt = sprintf("%c", 96); fl = ""; nsh = 0; shp = ""
+      for (x = 1; x <= nl; x++) if ((x < bs || x > be) && substr(L[x], 1, 1) != ">" && index(L[x], "Flight:") > 0) {
+        t = L[x]
+        while (match(t, /[A-Za-z][A-Za-z -]*: \[[^]]*\]/)) {
+          g = substr(t, RSTART, RLENGTH); t = substr(t, RSTART + RLENGTH); q = index(g, ": ["); fla = substr(g, 1, q); sh = substr(g, q + 2)
+          if (sh ~ /Date/ && !((fla, sh) in FSN)) { FSN[fla, sh] = 1; printf "FLT\t%s\t%s\n", fla, sh; if (!inl(fl, fla)) fl = fl (fl == "" ? "" : ",") fla; if (!(sh in SHN)) { SHN[sh] = 1; nsh++; shp = sh } }
+        }
+      }
+      lg = ""; ck = ""; m = split(al "," dl, xa, ",")
+      for (i = 1; i <= m; i++) if (xa[i] != "") { if (inl(fl, xa[i])) lg = lg (lg == "" ? "" : ",") xa[i]; else ck = ck (ck == "" ? "" : ",") xa[i] }
+      ns = 0; nsd = 0; s = sq(NT)
+      while (s != "") {
+        p = index(s, ". "); if (p == 0) { c = s; s = "" } else { c = substr(s, 1, p); s = substr(s, p + 2) }
+        ok = (nsh == 1 && lg != "" && ck != "" && index(c, bt shp bt) > 0 && index(c, "clock time") > 0)
+        m = split(lg, xa, ","); for (i = 1; i <= m; i++) if (!index(c, bt xa[i] bt)) ok = 0
+        m = split(ck, xa, ","); for (i = 1; i <= m; i++) if (!index(c, bt xa[i] bt)) ok = 0
+        if (ok) { ns++; if (index(c, od) > 0) nsd++ }
+      }
+      printf "SHAPE\t%d\t%d\t%d\n", nsh, ns, nsd
+      no = 0; nol = 0; for (i = 1; i <= ne; i++) if (E[i] == "Timezone delta") { no++; if (index(ET[i], uo) > 0) nol++ }
+      printf "OFFSET\t%d\t%d\n", no, nol
+      nsr = 0; nsb = 0; s = sq(LD)
+      while (s != "") {
+        p = index(s, ". "); if (p == 0) { c = s; s = "" } else { c = substr(s, 1, p); s = substr(s, p + 2) }
+        if (index(c, bt "/trip-record" bt) > 0) { nsr++; if (index(c, s1) > 0 && index(c, s2) > 0) nsb++ }
+      }
+      printf "SOURCE\t%d\t%d\n", nsr, nsb
     }' "$1" "$2"
 }
 # tw2_verdict <report> — `ok`, or the first limb that failed.
@@ -35984,6 +36038,7 @@ tw2_verdict() {
     $1 == "HEAD" { h = $2 } $1 == "LINE" { nl++; ln[$2]++ } $1 == "ENTRY" { ne++; en[$2]++; el[$2] = $3; if ($3 == "") bare = bare " " $2 }
     $1 == "UNRES" { un = un " " $2 ": " $3 } $1 == "DEP" { dep = $2; hot = $3 }
     $1 == "ADR" { an[$2] = $3; al[$2] = $4 }
+    $1 == "SHAPE" { shn = $2; shs = $3; shd = $4 } $1 == "OFFSET" { ofn = $2; ofl = $3 } $1 == "SOURCE" { srn = $2; srb = $3 }
     END {
       if (h != 1 || nl < 1) { print "population — the heading `### Effective Planning Days [DERIVED]` stands " h + 0 " time(s) and the block holds " nl + 0 " derived line(s), where once and at least one are owed"; exit }
       if (ne != nl) { print "bijection — " nl " derived line(s) and " ne + 0 " entry(ies)"; exit }
@@ -35995,6 +36050,10 @@ tw2_verdict() {
       if (an["arrival"] != 1 || an["departure"] != 1) { print "oracle — ADR-028 § 3 carries " an["arrival"] + 0 " arrival and " an["departure"] + 0 " departure bullet(s), where one each is owed"; exit }
       if (srt(el["Arrival day"]) != srt(al["arrival"])) { print "under-declared — entry `Arrival day` names [" el["Arrival day"] "] and ADR-028 § 3 names [" al["arrival"] "]"; exit }
       if (srt(el["Departure day"]) != srt(al["departure"])) { print "under-declared — entry `Departure day` names [" el["Departure day"] "] and ADR-028 § 3 names [" al["departure"] "]"; exit }
+      if (shn != 1) { print "shape — the template'"'"'s Flight: lines declare " shn + 0 " dated shape(s) for their leg values, where one is owed"; exit }
+      if (shs != 1 || shd != 0) { print "shape — " shs + 0 " sentence(s) of the note read each leg label ADR-028 § 3 names in that shape and each other label it names as a clock time, " shd + 0 " of them also saying how a derived line writes a date, where one such sentence, of its own, is owed"; exit }
+      if (ofn != 1 || ofl != 1) { print "offset — the Timezone delta entry stands " ofn + 0 " time(s) and limits the line to annotations that carry an explicit UTC offset " ofl + 0 " time(s), where once and once are owed"; exit }
+      if (srn != 1 || srb != 1) { print "source — the note opens, before its first entry, with " srn + 0 " sentence(s) naming /trip-record and " srb + 0 " saying it reads the engine'"'"'s own template and never this copy, where one and one are owed"; exit }
       print "ok"
     }' <<<"$1"
 }
@@ -36003,7 +36062,7 @@ TW2_R="$(tw2_report "$TW_TP" "$TW_ADR")"
 TW2_V="$(tw2_verdict "$TW2_R")"
 TW2_NL="$(LC_ALL=C awk -F'\t' '$1 == "LINE" { n++ } END { print n + 0 }' <<<"$TW2_R")"
 if [ "$TW2_V" = ok ]; then
-  PASS "TW2: the template's trip window carries $TW2_NL derived line(s) and one declaration entry for each, by name; every entry names its inputs by label and every label stands on a line of the template outside the note; the Arrival day and Departure day entries name exactly the labels ADR-028 § 3 names for those lines, read live; and the departure line carries no hotel clause (D-9)"
+  PASS "TW2: the template's trip window carries $TW2_NL derived line(s) and one declaration entry for each, by name; every entry names its inputs by label and every label stands on a line of the template outside the note; the Arrival day and Departure day entries name exactly the labels ADR-028 § 3 names for those lines, read live; the departure line carries no hotel clause (D-9); and the note reads each leg value in the one shape the template's Flight: lines declare and each check time as a clock time, in a sentence of its own, limits the Timezone delta line to annotations with an explicit UTC offset, and opens by saying /trip-record reads the engine's own template and never this copy"
 else
   FAIL "TW2: $TW2_V. templates/trip-context.template.md § Effective Planning Days [DERIVED] declares, per line, the inputs rule $TW_N recomputes it from (ADR-028 § 3), and a line declared with fewer inputs goes stale with no mark in the file"
 fi
@@ -36029,6 +36088,18 @@ TW2_C="$TW_WORK/tw2-under.md"; LC_ALL=C awk '!d && index($0, "> - *Arrival day* 
 tw2_ctl CTL-TW2-UNDER "$TW2_C" under-declared "\`Check-in time:\` removed from the Arrival day entry"
 TW2_C="$TW_WORK/tw2-hotel.md"; LC_ALL=C awk 'index($0, "- **[Date]:** Departure day — ") == 1 { $0 = "- **[Date]:** Departure day — must depart hotel by [time] for [departure time] flight" } { print }' "$TW_TP" > "$TW2_C"
 tw2_ctl CTL-TW2-HOTEL "$TW2_C" D-9 "the departure line restored to its hotel clause"
+# CTL-TW2-SHAPE, CTL-TW2-OFFSET, CTL-TW2-SOURCE — MUST FIRE: each of the declaration's three clauses put
+# back, alone, to the wording it replaced: the one universal shape sentence in place of the per-source
+# one; a delta line computed from the zones two abbreviations name; and a note that reads the trip's copy.
+TW2_C="$TW_WORK/tw2-shape.md"
+tw_swap "$TW_TP" "$TW2_C" $'> A leg\'s `Departs:` and `Arrives:` are read in the shape its flight line declares,\n> `[Day, Date, Time TZ]`; `Check-in time:` and `Check-out time:` are read as the clock time\n> their value opens with. A derived line writes a date as the month\'s three-letter name,\n> the day and the weekday in brackets. A value in none of these shapes is not an input this\n> block can read.' $'> A date is written as the month\'s three-letter name, the day and the weekday in\n> brackets; a time is the clock time a value opens with.\n> A value in no declared shape is not an input this block can read.'
+tw2_ctl CTL-TW2-SHAPE "$TW2_C" shape "the per-source shape sentence put back to one universal sentence"
+TW2_C="$TW_WORK/tw2-offset.md"
+tw_swap "$TW_TP" "$TW2_C" $'>   the second, the hours between them and the direction. It is computed only where both\n>   annotations carry an explicit UTC offset; where an annotation it did not change carries\n>   none, the line is not recomputable and that annotation is the input named.' $'>   the second, the hours between them and the direction, computed from the two zone\n>   abbreviations as the zones they name, whatever offset each\n>   implies on the leg\'s date.'
+tw2_ctl CTL-TW2-OFFSET "$TW2_C" offset "the Timezone delta entry's explicit-UTC-offset limit put back to a computation from two abbreviations"
+TW2_C="$TW_WORK/tw2-source.md"
+tw_swap "$TW_TP" "$TW2_C" "the engine's own template and never from this copy" "this block as it stands in the trip's file"
+tw2_ctl CTL-TW2-SOURCE "$TW2_C" source "the note's opening put back to reading the block as it stands in the trip's file"
 
 
 # ── TW3 — the writer is named, `fact` carries the recompute, and every citation names rule N. ──
