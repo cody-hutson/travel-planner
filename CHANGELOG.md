@@ -32,12 +32,12 @@ recomputable. A hand edit outside the command surface still leaves the window be
 picker, `CTL-ST-CF-CONDITION-CELL`'s target and `CTL-ST-CF-Q4-INERT`'s placement change, and
 `CTL-ST-CF-Q4-EXCLUDED` now reads VACUOUS, its EXCLUDED limb armed by `CTL-ST-CF-ROW-FLIP`.
 
-**Size fence.** Read against `v0.79.0`, the previous release tag, `CH_EMIT=growth bash
+**Size fence.** Read against `v0.80.0`, the previous release tag, `CH_EMIT=growth bash
 scripts/test-corpus-hygiene.sh` lists every row kept: none new, raised, lowered or dropped, and no
 file owes a row it lacks. The files that grew stand beneath their rows: `skills/trip-record/SKILL.md`
-grew 2,990 to 466,851, beneath 470,268; `CLAUDE.md` 478 to 89,456, beneath 97,553; and
+grew 2,989 to 469,811, beneath 470,268; `CLAUDE.md` 478 to 89,456, beneath 97,553; and
 `agents/03-scheduling.md` 356 to 36,619, beneath 39,526. `reference/data-model.md` shrank 4 to
-236,139 and `skills/trip-new/SKILL.md` 2 to 38,429. No ceiling was raised.
+236,430 and `skills/trip-new/SKILL.md` 2 to 38,429. No ceiling was raised.
 
 ## [0.80.0] — 2026-11-27 — A label edit touches only the label
 
