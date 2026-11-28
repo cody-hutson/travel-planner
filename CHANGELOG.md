@@ -3,6 +3,50 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [Unreleased] — 2026-11-27 — A date change recomputes the trip's planning-day window
+
+Recording a change to a declared input of the trip's planning-day window — the anchor origin's last
+outbound arrival or first return departure, the zone of its first outbound departure, or the check-in
+or check-out time — now recomputes that window in the same act. `/trip-record fact` rewrites only the
+lines of `### Effective Planning Days` whose inputs changed, shows each one as it was and as it becomes
+before it writes, and leaves a line whose other input it cannot read as it is, naming that input. A
+changed leg stated in prose rather than in the shape the template declares cannot be read, so the
+lines it feeds take their placeholders. The write-ownership table in `CLAUDE.md` now names
+`/trip-record` as the block's writer.
+
+- The recompute is `/trip-record`'s standing rule 21, landed verbatim from `ADR-028` § 7 as rule
+  2's fourth admitted shape. It binds every verb of the command that records an input of the block.
+- The trip-context template declares each window line's inputs and how the line is computed, in
+  the block's own note. The arrival line shows the arrival time and the check-in time. The departure
+  line shows the flight time and the check-out time, and no longer carries a hotel-departure time:
+  scheduling ends the departure day at transport's `Recommended hotel departure:`.
+- `fact`'s route, its replacement write shape and its cross-block table, the interview's conduct on
+  the trip-context form, `/trip-new`'s ground for writing no derived block, and Step 1's default in
+  `CLAUDE.md` say the same.
+- A trip created before this release keeps its window lines until an input of a line changes, and
+  then only the lines that input feeds are rewritten.
+
+**What is not observed, stated so.** The interview's route to the recompute is conduct only: no
+graded conversation runs on the trip-context form. The `Timezone delta` line is recomputed only where
+both zone annotations carry an explicit UTC offset: where one the act did not change is a bare
+abbreviation, the line is reported as not recomputable, and where the changed one carries no offset,
+the line takes its placeholder. A hand edit outside the command surface still leaves the window behind.
+
+**Suite.** Group TW grades, as text, the rule, the declaration (its shape, offset and source clauses,
+and the inputs and times each line shows), the writer, every citation of the rule, file by file, and
+three of the surfaces the row change reconciled: the retired hotel clause, scheduling's input item 3
+and `/trip-new`'s ground. No arm reads `CLAUDE.md` Step 1's default sentence or erase's row 34. `CTL-ST-CF-PIN-FLIP`'s picker, `CTL-ST-CF-CONDITION-CELL`'s
+target, `CTL-ST-CF-PROJ-FLIP`'s row and `CTL-ST-CF-Q4-INERT`'s placement change,
+`CTL-ST-CF-PROJ-CONDITION-CELL` plants its own no-writer row, and `CTL-ST-CF-Q4-EXCLUDED` now reads
+VACUOUS, its EXCLUDED limb armed by `CTL-ST-CF-ROW-FLIP`.
+
+**Size fence.** Read against `v0.80.0`, the previous release tag, `CH_EMIT=growth bash
+scripts/test-corpus-hygiene.sh` lists every row kept: none new, raised, lowered or dropped, and no
+file owes a row it lacks. The files that grew stand beneath their rows: `skills/trip-record/SKILL.md`
+grew 3,128 to 469,950, beneath 470,268; `CLAUDE.md` 478 to 89,456, beneath 97,553; and
+`agents/03-scheduling.md` 356 to 36,619, beneath 39,526. `reference/data-model.md` shrank 4 to
+236,430 and `skills/trip-new/SKILL.md` 2 to 38,429. No ceiling was raised.
+
 ## [0.80.0] — 2026-11-27 — A label edit touches only the label
 
 Rewording a question on either guided intake form now touches the label's two statements, its bullet on

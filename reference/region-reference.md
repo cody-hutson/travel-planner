@@ -50,36 +50,36 @@ conduct.
 |---|---|---|---|---|---|---|---|---|
 | `templates/trip-context.template.md` | 37 | 48 | `## Mode` | named | 2 | `## Mode` → `Current mode` and `Mode notes` | NO (writer-set) | — |
 | `templates/trip-context.template.md` | 49 | 56 | `## Destination` | named | 5 | `## Destination` | YES (interviewer) | — |
-| `templates/trip-context.template.md` | 57 | 134 | `## Logistics` | default | 8 | every untagged field **not named above** | YES (interviewer) | — |
+| `templates/trip-context.template.md` | 57 | 160 | `## Logistics` | default | 8 | every untagged field **not named above** | YES (interviewer) | — |
 | `templates/trip-context.template.md` | 71 | 77 | `### Outbound` | inherits | 8 | every untagged field **not named above** | YES (interviewer) | — |
 | `templates/trip-context.template.md` | 78 | 84 | `### Return` | inherits | 8 | every untagged field **not named above** | YES (interviewer) | — |
 | `templates/trip-context.template.md` | 85 | 118 | `### Additional origins` | inherits | 8 | every untagged field **not named above** | YES (interviewer) | — |
 | `templates/trip-context.template.md` | 95 | 118 | `#### Origin B — [City, Country ([airport code])]` | inherits | 8 | every untagged field **not named above** | YES (interviewer) | — |
-| `templates/trip-context.template.md` | 119 | 134 | `### Effective Planning Days [DERIVED]` | named | 4 | `[DERIVED]` block — `### Effective Planning Days` | EXCLUDED (no-writer) | — |
-| `templates/trip-context.template.md` | 135 | 154 | `## Accommodation` | default | 8 | every untagged field **not named above** | YES (interviewer) | — |
-| `templates/trip-context.template.md` | 145 | 148 | `### Transit Access [ENRICH]` | named | 3 | `[ENRICH]` fields — `### Transit Access`, `### Walkable Proximity`, `## Weather Context`, `## Destination Baseline`, `## Events & Calendar` | NO (marked) | — |
-| `templates/trip-context.template.md` | 149 | 154 | `### Walkable Proximity [ENRICH]` | named | 3 | `[ENRICH]` fields — `### Transit Access`, `### Walkable Proximity`, `## Weather Context`, `## Destination Baseline`, `## Events & Calendar` | NO (marked) | — |
-| `templates/trip-context.template.md` | 155 | 176 | `## Group` | named | 1 | Title line · `## Group` roster · `Total travelers` | CONDITIONAL (condition) | thereafter |
-| `templates/trip-context.template.md` | 177 | 208 | `## Hard Constraints` | default | 8 | every untagged field **not named above** | YES (interviewer) | — |
-| `templates/trip-context.template.md` | 186 | 195 | `### [Constraint Name]` | inherits | 8 | every untagged field **not named above** | YES (interviewer) | — |
-| `templates/trip-context.template.md` | 196 | 208 | `### [Constraint Name]` | inherits | 8 | every untagged field **not named above** | YES (interviewer) | — |
-| `templates/trip-context.template.md` | 209 | 219 | `## Soft Preferences` | default | 8 | every untagged field **not named above** | YES (interviewer) | — |
-| `templates/trip-context.template.md` | 220 | 231 | `## Trip Style` | default | 8 | every untagged field **not named above** | YES (interviewer) | — |
-| `templates/trip-context.template.md` | 232 | 241 | `## Budget Posture` | default | 8 | every untagged field **not named above** | YES (interviewer) | — |
-| `templates/trip-context.template.md` | 242 | 256 | `## Dietary & Health` | default | 8 | every untagged field **not named above** | YES (interviewer) | — |
-| `templates/trip-context.template.md` | 257 | 270 | `## Weather Context [ENRICH]` | named | 3 | `[ENRICH]` fields — `### Transit Access`, `### Walkable Proximity`, `## Weather Context`, `## Destination Baseline`, `## Events & Calendar` | NO (marked) | — |
-| `templates/trip-context.template.md` | 271 | 283 | `## Destination Baseline [ENRICH]` | named | 3 | `[ENRICH]` fields — `### Transit Access`, `### Walkable Proximity`, `## Weather Context`, `## Destination Baseline`, `## Events & Calendar` | NO (marked) | — |
-| `templates/trip-context.template.md` | 284 | 297 | `## Events & Calendar [ENRICH]` | named | 3 | `[ENRICH]` fields — `### Transit Access`, `### Walkable Proximity`, `## Weather Context`, `## Destination Baseline`, `## Events & Calendar` | NO (marked) | — |
-| `templates/trip-context.template.md` | 298 | 305 | `## Possible Day Trips` | default | 8 | every untagged field **not named above** | YES (interviewer) | — |
-| `templates/trip-context.template.md` | 306 | 317 | `## Locked Elements` | named | 6 | `## Locked Elements` · `## Current Itinerary Status` | YES (interviewer) | — |
-| `templates/trip-context.template.md` | 318 | 331 | `## Current Itinerary Status` | named | 6 | `## Locked Elements` · `## Current Itinerary Status` | YES (interviewer) | — |
-| `templates/trip-context.template.md` | 332 | 359 | `## Validation Requirements` | default | 8 | every untagged field **not named above** | YES (interviewer) | — |
-| `templates/trip-context.template.md` | 338 | 341 | `### Known Closure Risks` | inherits | 8 | every untagged field **not named above** | YES (interviewer) | — |
-| `templates/trip-context.template.md` | 342 | 345 | `### Reservation Status to Confirm` | inherits | 8 | every untagged field **not named above** | YES (interviewer) | — |
-| `templates/trip-context.template.md` | 346 | 349 | `### Price Staleness Flags` | inherits | 8 | every untagged field **not named above** | YES (interviewer) | — |
-| `templates/trip-context.template.md` | 350 | 353 | `### Travel Restriction Checks` | inherits | 8 | every untagged field **not named above** | YES (interviewer) | — |
-| `templates/trip-context.template.md` | 354 | 359 | `### Venue Deduplication Watch` | inherits | 8 | every untagged field **not named above** | YES (interviewer) | — |
-| `templates/trip-context.template.md` | 360 | 372 | `## Notes for All Agents` | default | 8 | every untagged field **not named above** | YES (interviewer) | — |
+| `templates/trip-context.template.md` | 119 | 160 | `### Effective Planning Days [DERIVED]` | named | 4 | `[DERIVED]` — `### Effective Planning Days` | NO (marked) | — |
+| `templates/trip-context.template.md` | 161 | 180 | `## Accommodation` | default | 8 | every untagged field **not named above** | YES (interviewer) | — |
+| `templates/trip-context.template.md` | 171 | 174 | `### Transit Access [ENRICH]` | named | 3 | `[ENRICH]` fields — `### Transit Access`, `### Walkable Proximity`, `## Weather Context`, `## Destination Baseline`, `## Events & Calendar` | NO (marked) | — |
+| `templates/trip-context.template.md` | 175 | 180 | `### Walkable Proximity [ENRICH]` | named | 3 | `[ENRICH]` fields — `### Transit Access`, `### Walkable Proximity`, `## Weather Context`, `## Destination Baseline`, `## Events & Calendar` | NO (marked) | — |
+| `templates/trip-context.template.md` | 181 | 202 | `## Group` | named | 1 | Title line · `## Group` roster · `Total travelers` | CONDITIONAL (condition) | thereafter |
+| `templates/trip-context.template.md` | 203 | 234 | `## Hard Constraints` | default | 8 | every untagged field **not named above** | YES (interviewer) | — |
+| `templates/trip-context.template.md` | 212 | 221 | `### [Constraint Name]` | inherits | 8 | every untagged field **not named above** | YES (interviewer) | — |
+| `templates/trip-context.template.md` | 222 | 234 | `### [Constraint Name]` | inherits | 8 | every untagged field **not named above** | YES (interviewer) | — |
+| `templates/trip-context.template.md` | 235 | 245 | `## Soft Preferences` | default | 8 | every untagged field **not named above** | YES (interviewer) | — |
+| `templates/trip-context.template.md` | 246 | 257 | `## Trip Style` | default | 8 | every untagged field **not named above** | YES (interviewer) | — |
+| `templates/trip-context.template.md` | 258 | 267 | `## Budget Posture` | default | 8 | every untagged field **not named above** | YES (interviewer) | — |
+| `templates/trip-context.template.md` | 268 | 282 | `## Dietary & Health` | default | 8 | every untagged field **not named above** | YES (interviewer) | — |
+| `templates/trip-context.template.md` | 283 | 296 | `## Weather Context [ENRICH]` | named | 3 | `[ENRICH]` fields — `### Transit Access`, `### Walkable Proximity`, `## Weather Context`, `## Destination Baseline`, `## Events & Calendar` | NO (marked) | — |
+| `templates/trip-context.template.md` | 297 | 309 | `## Destination Baseline [ENRICH]` | named | 3 | `[ENRICH]` fields — `### Transit Access`, `### Walkable Proximity`, `## Weather Context`, `## Destination Baseline`, `## Events & Calendar` | NO (marked) | — |
+| `templates/trip-context.template.md` | 310 | 323 | `## Events & Calendar [ENRICH]` | named | 3 | `[ENRICH]` fields — `### Transit Access`, `### Walkable Proximity`, `## Weather Context`, `## Destination Baseline`, `## Events & Calendar` | NO (marked) | — |
+| `templates/trip-context.template.md` | 324 | 331 | `## Possible Day Trips` | default | 8 | every untagged field **not named above** | YES (interviewer) | — |
+| `templates/trip-context.template.md` | 332 | 343 | `## Locked Elements` | named | 6 | `## Locked Elements` · `## Current Itinerary Status` | YES (interviewer) | — |
+| `templates/trip-context.template.md` | 344 | 357 | `## Current Itinerary Status` | named | 6 | `## Locked Elements` · `## Current Itinerary Status` | YES (interviewer) | — |
+| `templates/trip-context.template.md` | 358 | 385 | `## Validation Requirements` | default | 8 | every untagged field **not named above** | YES (interviewer) | — |
+| `templates/trip-context.template.md` | 364 | 367 | `### Known Closure Risks` | inherits | 8 | every untagged field **not named above** | YES (interviewer) | — |
+| `templates/trip-context.template.md` | 368 | 371 | `### Reservation Status to Confirm` | inherits | 8 | every untagged field **not named above** | YES (interviewer) | — |
+| `templates/trip-context.template.md` | 372 | 375 | `### Price Staleness Flags` | inherits | 8 | every untagged field **not named above** | YES (interviewer) | — |
+| `templates/trip-context.template.md` | 376 | 379 | `### Travel Restriction Checks` | inherits | 8 | every untagged field **not named above** | YES (interviewer) | — |
+| `templates/trip-context.template.md` | 380 | 385 | `### Venue Deduplication Watch` | inherits | 8 | every untagged field **not named above** | YES (interviewer) | — |
+| `templates/trip-context.template.md` | 386 | 398 | `## Notes for All Agents` | default | 8 | every untagged field **not named above** | YES (interviewer) | — |
 <!-- /region-contract -->
 
 ## Where this fits

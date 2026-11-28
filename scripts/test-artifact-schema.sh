@@ -467,6 +467,12 @@
 #        and the mark (OP3); the hub and the validator read a `PROFILE MISSING` traveller's needs
 #        as unknown (OP4); the C12 note cites the obligation (OP5); and the carry-forward, drop and
 #        marker sentences stand (OP-U1, OP-U2). Each arm with a must-fire control on a copy
+#   TW   the trip window's recompute: its standing rule stands once, verbatim from ADR-028 § 7 but
+#        for its number (TW1); the template declares each derived line's inputs as § 3 states or
+#        derives them, the times each line shows, and the clauses that say how it reads them (TW2);
+#        and the write-ownership row, `fact`'s route and every citation beside the recompute name
+#        that rule (TW3); and the surfaces the row change reconciled still say so (TW4). Text only,
+#        never behaviour. Each arm guards its population and has must-fire controls on a copy
 #   RS   the two rosters that DESCRIBE this suite — the coverage boundary in
 #        .github/workflows/artifact-schema.yml and THIS BLOCK — each set-diffed BOTH WAYS
 #        against the groups the run actually emitted. The executing set is taken from the RUN
@@ -9411,19 +9417,19 @@ ST_CF_MD_V2="$(while IFS= read -r st_cf_m; do [ -n "$st_cf_m" ] && [ "$(st_cf_ve
 # rules and never a measurement of the form. The lifecycle row's zero IS measured, by the probe that
 # counts the lines of the form opening on its bold label.
 #
-# ADR-028 (Accepted) rewrites the `[DERIVED]` row twice, and each change moves the realized vector
-# there, so each updates this pin in the same change. Its Retire landing set came first: landing
+# ADR-028 (Accepted) rewrote the `[DERIVED]` row twice, and each change moved the realized vector
+# there, so each updated this pin in the same change. Its Retire landing set came first: landing
 # after the Cutover set that first emitted the traveller-presence file, it removed the
 # per-traveller half of the row together with its block, so the row's Block text names the trip
-# window alone. The change that names `/trip-record` for `### Effective Planning Days` — that
-# record's Decision 1 row — comes second: it gives the trip window a row whose region realizes
-# NO (marked), and updates this pin in the same change.
+# window alone. The change that named `/trip-record` for `### Effective Planning Days` — that
+# record's Decision 1 row — came second: it gave the trip window a row whose region realizes
+# NO (marked), and updated this pin in the same change.
 #
 # One line per row: `<form tag> | <Block cell, verbatim> | <realized verdict>`.
 ST_CF_PIN='trip-context | Title line · `## Group` roster · `Total travelers` | CONDITIONAL (condition)
 trip-context | `## Mode` → `Current mode` and `Mode notes` | NO (writer-set)
 trip-context | `[ENRICH]` fields — `### Transit Access`, `### Walkable Proximity`, `## Weather Context`, `## Destination Baseline`, `## Events & Calendar` | NO (marked)
-trip-context | `[DERIVED]` block — `### Effective Planning Days` | EXCLUDED (no-writer)
+trip-context | `[DERIVED]` — `### Effective Planning Days` | NO (marked)
 trip-context | `## Destination` | YES (interviewer)
 trip-context | `## Locked Elements` · `## Current Itinerary Status` | YES (interviewer)
 trip-context | `**Lifecycle:**` — the lifecycle marker line | UNREACHABLE (by construction)
@@ -9640,10 +9646,13 @@ ST_CF_QX="$(st_cf_leak EXCLUDED)"; ST_CF_QN="$(st_cf_leak NO)"
 if [ -n "$ST_CF_QX" ]; then
   ST_CF_FX="$(st_cf_fixture q4-excluded)"; st_cf_ins_after "$ST_CF_FX" "${ST_CF_QX%%|*}" "- **${ST_CF_QX#*|}:** ZZ-ST-CF-LEAK"
   st_cf_mustfire "CTL-ST-CF-Q4-EXCLUDED[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q4 "a declared field ('${ST_CF_QX#*|}') is written under the heading of the first EXCLUDED region whose section declares one (line ${ST_CF_QX%%|*}) — a write into a region no writer owns"
-  ST_CF_FX="$(st_cf_fixture q4-inert)"; st_cf_ins_after "$ST_CF_FX" "${ST_CF_QX%%|*}" "- **ZZ-ST-CF-INERT:** an undeclared field-shaped bullet"
-  st_cf_mustnotfire "CTL-ST-CF-Q4-INERT[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 1 "an UNDECLARED field-shaped bullet is written at the same place (line ${ST_CF_QX%%|*}) — no interviewer can address a pair the classification does not declare, so it is not a write the interviewer could make"
 else
   VACUOUS "CTL-ST-CF-Q4-EXCLUDED[$ST_CF_TAG]: no EXCLUDED region of $ST_CF_REL sits in a section holding a declared field, so there is no leak into a no-writer region to construct — the exclusion's leak site is armed by CTL-ST-CF-Q4-NO and CTL-ST-CF-ROW-FLIP"
+fi
+ST_CF_QI="${ST_CF_QX:-$ST_CF_QN}"
+if [ -n "$ST_CF_QI" ]; then
+  ST_CF_FX="$(st_cf_fixture q4-inert)"; st_cf_ins_after "$ST_CF_FX" "${ST_CF_QI%%|*}" "- **ZZ-ST-CF-INERT:** an undeclared field-shaped bullet"
+  st_cf_mustnotfire "CTL-ST-CF-Q4-INERT[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 1 "an UNDECLARED field-shaped bullet is written at the same place (line ${ST_CF_QI%%|*}) — no interviewer can address a pair the classification does not declare, so it is not a write the interviewer could make"
 fi
 if [ -n "$ST_CF_QN" ]; then
   ST_CF_FX="$(st_cf_fixture q4-no)"; st_cf_ins_after "$ST_CF_FX" "${ST_CF_QN%%|*}" "- **${ST_CF_QN#*|}:** ZZ-ST-CF-LEAK"
@@ -9693,10 +9702,14 @@ ST_CF_FX="$(st_cf_fixture sens-v2)"; [ -n "$ST_CF_SR" ] && st_cf_dup_range "$ST_
 st_cf_mustnotfire "CTL-ST-CF-SENS-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 1 "the first sub-region of level 3 or deeper that is interviewable and holds a field is duplicated in place (lines ${ST_CF_SR:-none}) — a repeated block, as the form invites its filler to add, resolves as its twin does"
 # CTL-ST-CF-CONDITION-CELL — MUST NOT FIRE, the specificity of the class reader. On a COPY of the
 # charter, the agent contract span leaves the Condition cell of the first AGENT row and is written into
-# the Condition cell of the first addressed row naming no writer. A class read from the Writer and Block
-# cells alone does not move, and neither does any realized verdict.
+# the Condition cell of the first row naming no writer. A class read from the Writer and Block
+# cells alone does not move, and neither does any realized verdict. Since the trip window's row names
+# /trip-record, that row is row 9, a block not listed above, which no region reaches: the class
+# vector discriminates there, and the verdict limb holds by construction. A reader that moved a verdict
+# through a Condition cell would move the row's class first, which the vector sees. The projection's
+# specificity is measured below, on a no-writer row that control plants for itself.
 ST_CF_AR="$(awk -F'\t' '$1 == "ROW" && $3 == "AGENT" { print $2; exit }' <<<"$ST_CF_RG")"
-ST_CF_NR="$(awk -F'\t' '$1 == "ROW" && $3 == "NONE" && $5 == "addressed" { print $2; exit }' <<<"$ST_CF_RG")"
+ST_CF_NR="$(awk -F'\t' '$1 == "ROW" && $3 == "NONE" { print $2; exit }' <<<"$ST_CF_RG")"
 ST_CF_AS="$(awk -F'\t' -v r="$ST_CF_AR" '$1 == "ROW" && $2 == r { if (match($9, /`agents\/[^`]+\.md`/)) print substr($9, RSTART, RLENGTH); exit }' <<<"$ST_CF_RG")"
 ST_CF_CX="$(st_cf_charter_fixture condition-cell)"
 if [ -n "$ST_CF_AR" ] && [ -n "$ST_CF_NR" ] && [ -n "$ST_CF_AS" ]; then
@@ -9717,28 +9730,52 @@ ST_CF_CTV="$(st_cf_violations "$ST_CF_FILE" "$ST_CF_REL" "$ST_DM" "$ST_CF_CX")"
 ST_CF_CT0="$(st_cf_tally "$ST_CF_LIVE" | tr '\n' ' ')"; ST_CF_CT1="$(st_cf_tally "$ST_CF_CTV" | tr '\n' ' ')"
 ST_CF_CTADD="$(st_cf_added "$ST_CF_LIVE" "$ST_CF_CTV" | tr '\n' ' ')"
 if [ -z "$ST_CF_AR" ] || [ -z "$ST_CF_NR" ] || [ -z "$ST_CF_AS" ]; then
-  VACUOUS "CTL-ST-CF-CONDITION-CELL[$ST_CF_TAG]: the writer table carries no AGENT row with a contract span (${ST_CF_AR:-none}) or no addressed row naming no writer (${ST_CF_NR:-none}), so there is no Condition-cell citation to move between them"
+  VACUOUS "CTL-ST-CF-CONDITION-CELL[$ST_CF_TAG]: the writer table carries no AGENT row with a contract span (${ST_CF_AR:-none}) or no row naming no writer (${ST_CF_NR:-none}), so there is no Condition-cell citation to move between them"
 elif [ "$ST_CF_CA" = gone ] && [ "$ST_CF_CN" = carried ] && [ -n "${ST_CF_CL0% }" ] && [ "$ST_CF_CL1" = "$ST_CF_CL0" ] && [ "$ST_CF_CV1" = "$ST_CF_CV0" ] && [ -z "$ST_CF_CTADD" ]; then
   PASS "CTL-ST-CF-CONDITION-CELL[$ST_CF_TAG]: MUST NOT FIRE — on a COPY of the charter the agent contract span $ST_CF_AS leaves the Condition cell of row $ST_CF_AR and is written into that of row $ST_CF_NR, and every row's class reads as before [${ST_CF_CL0% }], every realized verdict with it, and the evaluator's findings [${ST_CF_CT0% }]. A writer's class is read from its Writer and Block cells alone, so the column that explains cannot move a verdict"
 else
   FAIL "CTL-ST-CF-CONDITION-CELL[$ST_CF_TAG]: MUST NOT FIRE — with the agent contract span moved between Condition cells on a COPY of the charter (source row ${ST_CF_AR:-none} $ST_CF_CA, target row ${ST_CF_NR:-none} $ST_CF_CN), the classes read [${ST_CF_CL1% }] against [${ST_CF_CL0% }] and the findings [${ST_CF_CT1% }] against [${ST_CF_CT0% }], where both are owed unchanged. A class read from the Condition column moves a verdict with the explanation of a row rather than its declaration"
 fi
 
-# ── CTL-ST-CF-PROJ-CONDITION-CELL — MUST NOT FIRE, the same specificity on the PROJECTION. Over the charter
-# copy the arm above built, this member's derived block is byte-identical to its block over the real
-# charter: the column that explains a row cannot move what the interviewer reads.
-ST_CF_PJC0="$(st_cf_proj_block "$ROOT" "$ST_CF_REL" "$ST_CF_OWN")"; ST_CF_PJC1="$(st_cf_proj_block "$ROOT" "$ST_CF_REL" "$ST_CF_CX")"
+# ── CTL-ST-CF-PROJ-CONDITION-CELL — MUST NOT FIRE, the same specificity on the PROJECTION. The arm above
+# writes the span into the first row naming no writer, which is row 9 since the trip window's row names
+# /trip-record, and row 9 projects no region — so its copy shows the projection nothing, and this
+# control, following it there with its body unchanged, measured nothing. It plants its own target
+# instead, on COPIES of the charter: the first addressed YES row — the row CTL-ST-CF-PROJ-FLIP flips —
+# has its Writer cell set to name no writer, so its regions read EXCLUDED (no-writer) in the block
+# derived over that copy; a second copy also moves the agent contract span from row AR's Condition
+# cell to the planted row's. The two blocks are byte-identical: the column that explains a row cannot
+# move what the interviewer reads. A plant whose regions do not read EXCLUDED measures nothing and FAILs.
+ST_CF_PCR="$(awk -F'\t' '$1 == "ROW" && $4 == "YES" && $5 == "addressed" { print $2; exit }' <<<"$ST_CF_RG")"
+ST_CF_PCP="$(st_cf_charter_fixture proj-condition-plant)"
+if [ -n "$ST_CF_PCR" ]; then st_cf_cell "$ST_CF_PCP" "$(st_cf_rowline "$ST_CF_PCR")" "$ST_CF_WCOL" set '**no writer exists**'; fi
+ST_CF_PCM="$ST_CF_DIR/proj-condition-moved-charter.md"; cp "$ST_CF_PCP" "$ST_CF_PCM"
+if [ -n "$ST_CF_PCR" ] && [ -n "$ST_CF_AR" ] && [ -n "$ST_CF_AS" ]; then
+  ST_CF_C=1
+  while [ "$ST_CF_C" -le "${ST_CF_NCOL:-0}" ]; do
+    { [ "$ST_CF_C" = "$ST_CF_BCOL" ] || [ "$ST_CF_C" = "$ST_CF_WCOL" ]; } || { st_cf_cell "$ST_CF_PCM" "$(st_cf_rowline "$ST_CF_AR")" "$ST_CF_C" drop "$ST_CF_AS"; ST_CF_PLC="$ST_CF_C"; }
+    ST_CF_C=$((ST_CF_C + 1))
+  done
+  st_cf_cell "$ST_CF_PCM" "$(st_cf_rowline "$ST_CF_PCR")" "${ST_CF_PLC:-0}" add " Contract: $ST_CF_AS."
+fi
+ST_CF_PCG="$(ft_regions "$ST_CF_FILE" "$ST_CF_PCM" 2>/dev/null)"
+ST_CF_PCA="$(awk -F'\t' -v r="$ST_CF_AR" -v s="$ST_CF_AS" '$1 == "ROW" && $2 == r { print (index($11, s) ? "kept" : "gone"); exit }' <<<"$ST_CF_PCG")"
+ST_CF_PCN="$(awk -F'\t' -v r="$ST_CF_PCR" -v s="$ST_CF_AS" '$1 == "ROW" && $2 == r { print (index($11, s) ? "carried" : "absent"); exit }' <<<"$ST_CF_PCG")"
+ST_CF_PJC0="$(st_cf_proj_block "$ROOT" "$ST_CF_REL" "$ST_CF_PCP")"; ST_CF_PJC1="$(st_cf_proj_block "$ROOT" "$ST_CF_REL" "$ST_CF_PCM")"
 ST_CF_PJCN="$(st_cf_proj_rows "$ST_CF_PJC0")"
-if [ -z "$ST_CF_AR" ] || [ -z "$ST_CF_NR" ] || [ -z "$ST_CF_AS" ]; then
-  VACUOUS "CTL-ST-CF-PROJ-CONDITION-CELL[$ST_CF_TAG]: there is no Condition-cell citation to move (CTL-ST-CF-CONDITION-CELL names why), so the projection's specificity has no input here"
-elif ! cmp -s "$ST_CF_OWN" "$ST_CF_CX" && [ "${ST_CF_PJCN:-0}" -gt 0 ] && [ "$ST_CF_PJC1" = "$ST_CF_PJC0" ]; then
-  PASS "CTL-ST-CF-PROJ-CONDITION-CELL[$ST_CF_TAG]: MUST NOT FIRE — over the charter copy whose agent contract span moved from row $ST_CF_AR's Condition cell to row $ST_CF_NR's, this member's derived region-contract block is byte-identical to its block over the real charter, over $ST_CF_PJCN region row(s). What the interviewer reads moves only with a row's Writer or Block cell"
+ST_CF_PJCX="$(awk -v r="$ST_CF_PCR" '{ s = $0; gsub(/\\\|/, "\035", s); k = split(s, f, "|"); if (k >= 11 && f[3] ~ /^[ \t]*[0-9]+[ \t]*$/) { c = f[7]; gsub(/[ \t]/, "", c); if (c == r) { n++; if (f[9] ~ /EXCLUDED \(no-writer\)/) x++ } } } END { print n + 0, x + 0 }' <<<"$ST_CF_PJC0")"
+if [ -z "$ST_CF_PCR" ] || [ -z "$ST_CF_AR" ] || [ -z "$ST_CF_AS" ]; then
+  VACUOUS "CTL-ST-CF-PROJ-CONDITION-CELL[$ST_CF_TAG]: the writer table carries no addressed YES row to plant a no-writer row on (${ST_CF_PCR:-none}) or no AGENT row with a contract span (${ST_CF_AR:-none}), so the projection's specificity has no input here"
+elif ! cmp -s "$ST_CF_OWN" "$ST_CF_PCP" && [ "${ST_CF_PJCX%% *}" -gt 0 ] && [ "${ST_CF_PJCX%% *}" = "${ST_CF_PJCX##* }" ] && [ "$ST_CF_PCA" = gone ] && [ "$ST_CF_PCN" = carried ] && [ "${ST_CF_PJCN:-0}" -gt 0 ] && [ "$ST_CF_PJC1" = "$ST_CF_PJC0" ]; then
+  PASS "CTL-ST-CF-PROJ-CONDITION-CELL[$ST_CF_TAG]: MUST NOT FIRE — on a COPY of the charter whose row $ST_CF_PCR is planted to name no writer, its ${ST_CF_PJCX%% *} region row(s) read EXCLUDED (no-writer); with the agent contract span $ST_CF_AS also moved from row $ST_CF_AR's Condition cell to row $ST_CF_PCR's, this member's derived region-contract block is byte-identical to the planted copy's, over $ST_CF_PJCN region row(s). What the interviewer reads moves only with a row's Writer or Block cell"
 else
-  FAIL "CTL-ST-CF-PROJ-CONDITION-CELL[$ST_CF_TAG]: MUST NOT FIRE — with the agent contract span moved between Condition cells on a copy of the charter, this member's derived block $( [ "$ST_CF_PJC1" = "$ST_CF_PJC0" ] && echo 'stayed identical' || echo CHANGED ) over ${ST_CF_PJCN:-0} region row(s), where an identical, non-empty block is owed"
+  FAIL "CTL-ST-CF-PROJ-CONDITION-CELL[$ST_CF_TAG]: MUST NOT FIRE — with row ${ST_CF_PCR:-none} planted to name no writer on a copy of the charter (its [region rows, EXCLUDED] read [$ST_CF_PJCX], where every one EXCLUDED is owed) and the agent contract span moved between Condition cells on a second copy (source row ${ST_CF_AR:-none} $ST_CF_PCA, target row ${ST_CF_PCR:-none} $ST_CF_PCN), this member's derived block $( [ "$ST_CF_PJC1" = "$ST_CF_PJC0" ] && echo 'stayed identical' || echo CHANGED ) over ${ST_CF_PJCN:-0} region row(s), where an identical, non-empty block is owed"
 fi
 
-# ── CTL-ST-CF-PIN-FLIP — MUST FIRE on the pin. On a COPY of the charter, the first interviewable row
-# that names a region gains a clause naming another writer at creation: its regions go from YES to
+# ── CTL-ST-CF-PIN-FLIP — MUST FIRE on the pin. On a COPY of the charter, the first interviewer-class
+# row that names a region and realizes YES (interviewer) on its pin — a marked region realizes NO
+# (marked) whoever writes it, so a flip there moves nothing — gains a clause naming another writer at
+# creation: its regions go from YES to
 # CONDITIONAL and no declared field is stranded, so no question the evaluator asks moves — and the pin
 # must FAIL, naming that row, both verdicts and the record it is a finding about. Graded as a DELTA:
 # the defects the flip ADDS to this run's own pin report. The flip lands on the first such row that is
@@ -9748,7 +9785,7 @@ fi
 # is off its pin, there is no flip to read, and the arm is VACUOUS while ST-CF-PIN names the rows off it.
 ST_CF_PREP0="$(st_cf_pin_report "$ST_CF_TAG" "$(st_cf_row_vector "$ST_CF_RG")")"
 ST_CF_PBAD0="$(awk -F'\t' '$1 == "MISMATCH" || $1 == "UNPINNED" || $1 == "MISSING" { n++ } END { print n + 0 }' <<<"$ST_CF_PREP0")"
-ST_CF_PR="$(awk -F'\t' 'FILENAME == ARGV[1] { if ($1 == "MATCH") on[$2] = 1; next } $1 == "ROW" && $4 == "YES" && $5 == "addressed" && ($2 in on) { print $2; exit }' <(printf '%s\n' "$ST_CF_PREP0") <(printf '%s\n' "$ST_CF_RG"))"
+ST_CF_PR="$(awk -F'\t' 'FILENAME == ARGV[1] { if ($1 == "MATCH" && $4 == "YES (interviewer)") on[$2] = 1; next } $1 == "ROW" && $4 == "YES" && $5 == "addressed" && ($2 in on) { print $2; exit }' <(printf '%s\n' "$ST_CF_PREP0") <(printf '%s\n' "$ST_CF_RG"))"
 ST_CF_PW="$(awk -F'\t' -v r="$ST_CF_PR" '$1 == "ROW" && $2 == r { print $9; exit }' <<<"$ST_CF_RG")"
 ST_CF_PX="$(st_cf_charter_fixture pin-flip)"
 [ -n "$ST_CF_PR" ] && st_cf_cell "$ST_CF_PX" "$(st_cf_rowline "$ST_CF_PR")" "$ST_CF_WCOL" set "\`/zz-st-cf-probe\` at creation; $ST_CF_PW"
@@ -10208,6 +10245,13 @@ fi
 # Writer cell names no writer. The block derived over that copy changes and that row's regions read
 # EXCLUDED (no-writer) in it; the region derived over the real charter FAILs against the copy, so a
 # writer-table edit is a red until the block is regenerated; and the regenerated region passes.
+# Since the trip window's row names /trip-record, that row is the first addressed YES row: row 4, the
+# trip window, where it was row 5, `## Destination`, with this body unchanged by the move. The trip
+# window's regions are `[DERIVED]`-marked, so this control's EXCLUDED limb holds only because a row
+# naming no writer outranks the mark, and it is one of the two arms that pin that precedence, with
+# CTL-ST-CF-PROJ-CONDITION-CELL's plant on the same row. A picker moved back to an unmarked row leaves
+# that plant to pin it alone. The row it flips is marked, not interviewable; CTL-ST-CF-ROW-FLIP flips
+# an interviewable row, and grades Q4 rather than the projection.
 ST_CF_PJ_RG="$(ft_regions "$ROOT/$ST_CF_MD_V2" "$ST_CF_OWN" 2>/dev/null)"
 ST_CF_PJ_FR="$(awk -F'\t' '$1 == "ROW" && $4 == "YES" && $5 == "addressed" { print $2; exit }' <<<"$ST_CF_PJ_RG")"
 ST_CF_PJ_FL="$(awk -F'\t' -v r="$ST_CF_PJ_FR" '$1 == "ROW" && $2 == r { print $6; exit }' <<<"$ST_CF_PJ_RG")"
@@ -35786,6 +35830,563 @@ op3_assert "$ROOT"
 if [ -n "$OP_ADM" ]; then
   md_flips op_classify 'OP3' op3_assert "$ROOT"
 fi
+
+# ══════════════════════════════════════════════════════════════════
+# Group TW — the trip window's recompute rule, its declaration and its writer (#1520).
+#
+# `ADR-028` gives `### Effective Planning Days` a writer, `/trip-record`, which recomputes a line in
+# the act that records one of that line's declared inputs (Decision 1), under a standing rule
+# landed verbatim from the record's § 7, from inputs the template declares per line (§ 3). Four
+# arms grade the TEXT of that landing and of what it reconciled. Each reads its oracle live and holds
+# no copy of it:
+#   TW1  the standing clause carries § 7's rule exactly once, verbatim but for its number, as rule
+#        2's fourth admitted shape, in a numbering that runs without a gap;
+#   TW2  the template's trip-window note declares each derived line's inputs by label, each line's
+#        being the set ADR-028 § 3 states for it or derives by reference; every time a derived line
+#        shows is one its entry says it shows; every label resolves in the template; the departure
+#        line carries no hotel clause (D-9); and the note reads each leg value in the one shape the
+#        template's `Flight:` lines declare and each check time as a clock time, in a sentence of its
+#        own, computes the delta line only from annotations with an explicit UTC offset, and opens
+#        by saying the engine's template is read, never this copy;
+#   TW3  `CLAUDE.md` § Write ownership carries § 1's row with the number TW1 found; `fact`'s
+#        `[DERIVED]` route row names that rule; its cross-block table names no trip-window
+#        consequence; its `**Reads:**` line names the block and the template; and every citation of
+#        a standing rule that shares a sentence with the recompute, in `fact` and in the conduct
+#        file's block-owned section, names that number, at no fewer sites than each file carries;
+#   TW4  the surfaces the row change reconciled still say so: no tracked markdown outside the records
+#        and the specimens carries the departure line's retired hotel clause, scheduling's `## Input`
+#        item 3 ends the departure day at transport's `Recommended hotel departure:`, and
+#        `/trip-new`'s ground gives the `[DERIVED]` block to `/trip-record`.
+# Every limb asserts its population first, so a relocated surface reads FAIL and never a vacuous
+# PASS. Every arm has must-fire controls on a COPY.
+#
+# WHAT THIS GROUP DOES NOT ESTABLISH. It grades text, never behaviour. Whether a verb recomputes
+# only the lines whose inputs changed, echoes first and parses nothing out of prose stays conduct
+# (`ADR-028` § What nothing grades); the release's Stage 7 check observed it once, and nothing here
+# does. Every reader takes a file or a here-string, and nothing is piped into a reader that can stop
+# early (group PF).
+# ══════════════════════════════════════════════════════════════════
+echo
+echo "── Group TW — the trip window's recompute rule, its declaration and its writer: text, never behaviour."
+
+TW_WORK="$WORK/tw"; mkdir -p "$TW_WORK"
+TW_ADR="$ROOT/reference/adr/ADR-028-derived-planning-day-block-owners.md"
+TW_SK="$ROOT/skills/trip-record/SKILL.md"
+TW_TP="$ROOT/templates/trip-context.template.md"
+TW_CH="$ROOT/CLAUDE.md"
+TW_IC="$ROOT/skills/trip-record/interview-conduct.md"
+
+# tw_quote <adr> <heading-prefix> — the `>` lines under the first heading opening with the prefix, up
+# to the next `### ` heading, with the `> ` stripped, one per line.
+tw_quote() {
+  LC_ALL=C awk -v h="$2" 'index($0, h) == 1 { on = 1; next } on && /^### / { exit }
+    on && /^>/ { s = $0; sub(/^> ?/, "", s); print s }' "$1"
+}
+# tw_norm — its input joined and whitespace-squeezed onto one line.
+tw_norm() { LC_ALL=C awk '{ s = s " " $0 } END { gsub(/[ \t]+/, " ", s); sub(/^ /, "", s); sub(/ $/, "", s); print s }'; }
+# tw_swap <file> <copy> <old> <new> — <copy> is <file> with its one occurrence of <old>, which may span
+# lines, replaced by <new>. Where <old> does not occur exactly once, <copy> is <file> unchanged, which a
+# control reads as a copy that differs in nothing.
+tw_swap() {
+  TW_OLD="$3" TW_NEW="$4" LC_ALL=C awk 'BEGIN { a = ENVIRON["TW_OLD"]; b = ENVIRON["TW_NEW"] }
+    { s = s $0 "\n" }
+    END { n = 0; t = s; while (a != "" && (p = index(t, a)) > 0) { n++; t = substr(t, p + length(a)) }
+      if (n == 1) { p = index(s, a); s = substr(s, 1, p - 1) b substr(s, p + length(a)) }
+      printf "%s", s }' "$1" > "$2"
+}
+
+# tw1_report <adr> <skill> — one line: <matches> <N> <gapless> <max> <third-at-7> <fourth-at-N>
+# <fourth-elsewhere> <rules> <§7-bytes>. A rule is a column-0 `<n>. ` line inside the standing clause
+# and every line after it up to the next such line or the Extension rule.
+tw1_report() {
+  local q
+  q="$(tw_quote "$1" '### 7. ')"; q="$(tw_norm <<<"$q")"
+  LC_ALL=C awk -v q="$q" '
+    function mask(s) { sub(/^[0-9]+\. /, "#. ", s); return s }
+    function cnt(s, t,   n, p) { n = 0; while ((p = index(s, t)) > 0) { n++; s = substr(s, p + length(t)) }; return n }
+    /^## Standing clause/ { on = 1; next }
+    on && /^\*\*Extension rule\.\*\*/ { on = 0 }
+    !on { next }
+    /^[0-9]+\. / { r++; num[r] = $0; sub(/\. .*/, "", num[r]); txt[r] = $0; next }
+    r { txt[r] = txt[r] " " $0 }
+    END {
+      Q = mask(q); m = 0; N = 0; gap = "yes"; mx = 0; th = 0; fN = 0; fo = 0
+      for (i = 1; i <= r; i++) {
+        t = txt[i]; gsub(/[ \t]+/, " ", t); sub(/ $/, "", t)
+        if (num[i] + 0 != i) gap = "no"
+        if (num[i] + 0 > mx) mx = num[i] + 0
+        if (Q != "#. " && mask(t) == Q) { m++; N = num[i] + 0 }
+        if (num[i] + 0 == 7) th = cnt(t, "third admitted shape")
+        f[i] = cnt(t, "fourth admitted shape")
+      }
+      for (i = 1; i <= r; i++) if (N > 0 && num[i] + 0 == N) fN = f[i]; else fo += f[i]
+      printf "%d %d %s %d %d %d %d %d %d\n", m, N, gap, mx, th, fN, fo, r, length(q)
+    }' "$2"
+}
+# tw1_verdict <report> — `ok`, or the first limb that failed, worded for the FAIL.
+tw1_verdict() {
+  local m n g mx th fn fo r ql
+  read -r m n g mx th fn fo r ql <<<"$1"
+  if [ "${ql:-0}" -lt 200 ] || [ "${r:-0}" -lt 1 ]; then echo "population — § 7 read ${ql:-0} B and the standing clause ${r:-0} rule(s), so nothing was compared"; return; fi
+  if [ "$m" -ne 1 ]; then echo "matches=$m — § 7's rule occurs $m time(s) in the standing clause, verbatim but for its number, where once is owed"; return; fi
+  if [ "$g" != yes ]; then echo "gapless=no — the clause's numbers do not run 1..$mx without a gap or a repeat"; return; fi
+  if [ "$th" -ne 1 ]; then echo "rule 7 carries 'third admitted shape' $th time(s), where once is owed"; return; fi
+  if [ "$fn" -ne 1 ] || [ "$fo" -ne 0 ]; then echo "'fourth admitted shape' occurs $fn time(s) in rule $n and $fo elsewhere, where 1 and 0 are owed"; return; fi
+  echo ok
+}
+
+TW1_R="$(tw1_report "$TW_ADR" "$TW_SK")"
+TW1_V="$(tw1_verdict "$TW1_R")"
+read -r _ TW_N _ TW1_MX _ _ _ TW1_NR TW1_QL <<<"$TW1_R"
+if [ "$TW1_V" = ok ]; then
+  PASS "TW1: the standing clause carries ADR-028 § 7's rule exactly once, verbatim but for its number, as rule $TW_N of $TW1_NR; the clause's numbers run 1..$TW1_MX without a gap; rule 7 is rule 2's third admitted shape and rule $TW_N its fourth, and no other rule claims the fourth. § 7 is read live ($TW1_QL B) and never held here, and no limb asks that rule $TW_N be the last, so a rule appended later leaves this arm green"
+else
+  FAIL "TW1: $TW1_V. ADR-028 § 7 is the rule's one source: land it verbatim under the next free number, as a widening of rule 2, with rule 7 left exactly as it stands"
+  TW_N=0
+fi
+
+# ── TW1's controls, each on a COPY of the skill file. ──
+# CTL-TW1-ABSENT — MUST FIRE: the rule TW1 found is deleted.
+TW1_CA="$TW_WORK/tw1-absent.md"
+LC_ALL=C awk -v n="$TW_N" '/^## Standing clause/ { on = 1 }
+  on && /^\*\*Extension rule\.\*\*/ { on = 0; skip = 0 }
+  on && /^[0-9]+\. / { r = $0; sub(/\. .*/, "", r); skip = (r + 0 == n + 0) }
+  !skip { print }' "$TW_SK" > "$TW1_CA"
+TW1_CAV="$(tw1_verdict "$(tw1_report "$TW_ADR" "$TW1_CA")")"
+if [ "$TW_N" -gt 0 ] && ! cmp -s "$TW_SK" "$TW1_CA" && [ "${TW1_CAV%% *}" = "matches=0" ]; then
+  PASS "CTL-TW1-ABSENT: MUST FIRE — with rule $TW_N deleted from a copy of the skill file, TW1 reads '${TW1_CAV%% —*}': a missing rule is a FAIL, not a pass over the rules that remain"
+else
+  FAIL "CTL-TW1-ABSENT: MUST FIRE — with rule ${TW_N:-0} deleted from a copy (copy differs: $(cmp -s "$TW_SK" "$TW1_CA" && echo no || echo yes)), TW1 read '$TW1_CAV' where 'matches=0' is owed"
+fi
+# CTL-TW1-WORD — MUST FIRE: one word of the rule's obligation changed, the record left as it stands.
+TW1_CW="$TW_WORK/tw1-word.md"
+LC_ALL=C awk '!d && index($0, "**only the lines of that block") { sub(/\*\*only the lines of that block/, "**all the lines of that block"); d = 1 } { print } END { exit (d ? 0 : 3) }' "$TW_SK" > "$TW1_CW"; TW1_CWRC=$?
+TW1_CWV="$(tw1_verdict "$(tw1_report "$TW_ADR" "$TW1_CW")")"
+if [ "$TW1_CWRC" = 0 ] && [ "${TW1_CWV%% *}" = "matches=0" ]; then
+  PASS "CTL-TW1-WORD: MUST FIRE — 'only the lines of that block' became 'all the lines of that block' in a copy, and TW1 reads '${TW1_CWV%% —*}': a drifted rule is not § 7's rule"
+else
+  FAIL "CTL-TW1-WORD: MUST FIRE — the word change landed=$([ "$TW1_CWRC" = 0 ] && echo yes || echo no) and TW1 read '$TW1_CWV' where 'matches=0' is owed"
+fi
+# CTL-TW1-WRAP — MUST NOT FIRE: the same rule, one word to a line. Whitespace is not content.
+TW1_CR="$TW_WORK/tw1-wrap.md"
+LC_ALL=C awk -v n="$TW_N" '/^## Standing clause/ { on = 1 }
+  on && /^\*\*Extension rule\.\*\*/ { on = 0; in_r = 0 }
+  on && /^[0-9]+\. / { r = $0; sub(/\. .*/, "", r); if (in_r) { print "" }; in_r = (r + 0 == n + 0); if (in_r) { k = split($0, w, " "); print w[1] " " w[2]; for (i = 3; i <= k; i++) print "    " w[i]; next } }
+  in_r && NF { k = split($0, w, " "); for (i = 1; i <= k; i++) print "    " w[i]; next }
+  in_r && !NF { next }
+  { print }' "$TW_SK" > "$TW1_CR"
+TW1_CRV="$(tw1_verdict "$(tw1_report "$TW_ADR" "$TW1_CR")")"
+if [ "$TW_N" -gt 0 ] && ! cmp -s "$TW_SK" "$TW1_CR" && [ "$TW1_CRV" = ok ]; then
+  PASS "CTL-TW1-WRAP: MUST NOT FIRE — rule $TW_N rewrapped one word to a line in a copy still reads ok: TW1 compares words, never line breaks"
+else
+  FAIL "CTL-TW1-WRAP: MUST NOT FIRE — rule ${TW_N:-0} rewrapped in a copy (copy differs: $(cmp -s "$TW_SK" "$TW1_CR" && echo no || echo yes)) read '$TW1_CRV' where 'ok' is owed: the comparison is reading layout"
+fi
+
+
+# ── TW2 — the template declares each derived line's inputs. ──
+# tw2_report <template> <adr> — tab-separated records:
+#   HEAD <n>                    lines that are exactly the block's heading
+#   LINE <name>                 a derived line: a column-0 `- **` bullet in the block, named by its
+#                               label, or, where the label opens with `[`, by its text up to ` — ` or ` (`
+#   ENTRY <name> <labels>       a `> - *<name>* ←` entry and the backticked labels ending in `:` it names
+#   UNRES <entry> <label>       a label no line outside the block's quotes carries
+#   DEP <n> <hotel>             derived lines named `Departure day`, and how many of them say `hotel`
+#   ADR <line> <n> <labels>     ADR-028 § 3's arrival and departure bullets: found n times, their labels
+#   ADRREF <line> <n> <worded>  § 3's full-days and total bullets: found n times, and whether each still
+#                               states its inputs by the reference the arm derives them from
+#   SHOWN <line> <times>        the `[… time]` placeholders a derived line shows
+#   SHOWS <entry> <times>       the `… time` phrases its entry's `it shows` clause names, backticked labels aside
+#   FLT <label> <shape>         a label a `Flight:` line of the template declares with a dated shape
+#   SHAPE <shapes> <sents> <dated>  the dated shapes FLT found; the sentences of the note, outside its
+#                               entries, that name every § 3 label FLT carries with that one shape and
+#                               every other § 3 label with `clock time`; and how many of those also say
+#                               how a derived line writes a date
+#   OFFSET <entries> <limited>  `Timezone delta` entries, and how many limit the line to annotations
+#                               that carry an explicit UTC offset
+#   SOURCE <sents> <both>       sentences of the note's opening, before its first entry, naming
+#                               `/trip-record`, and how many say it reads the engine's own template and
+#                               never this copy
+tw2_report() {
+  LC_ALL=C awk -v hd='### Effective Planning Days [DERIVED]' -v rf='those two dates' -v rt='every input of the arrival, departure and full-days lines' -v od='three-letter' -v uo='only where both annotations carry an explicit UTC offset' -v s1="the engine's own template" -v s2='never from this copy' '
+    function labels(s,   o, t, seen) { o = ""; split("", seen); while (match(s, /`[^`]+`/)) { t = substr(s, RSTART + 1, RLENGTH - 2); s = substr(s, RSTART + RLENGTH); if (t ~ /:$/ && !(t in seen)) { seen[t] = 1; o = o (o == "" ? "" : ",") t } }; return o }
+    function sq(s) { gsub(/[ \t]+/, " ", s); sub(/^ /, "", s); sub(/ $/, "", s); return s }
+    function inl(list, k,   xa, m, i) { m = split(list, xa, ","); for (i = 1; i <= m; i++) if (xa[i] == k) return 1; return 0 }
+    function tms(s,   o) { o = ""; gsub(/`[^`]*`/, " ", s); s = tolower(s); while (match(s, /[a-z-]+ time/)) { o = o (o == "" ? "" : ",") substr(s, RSTART, RLENGTH); s = substr(s, RSTART + RLENGTH) }; return o }
+    function flush() { if (en != "") { E[++ne] = en; EL[ne] = labels(et); ET[ne] = sq(ec) }; en = ""; et = ""; ec = "" }
+    FNR == NR {
+      L[++nl] = $0
+      if ($0 == hd) { heads++; if (!in_b) { in_b = 1; bs = nl }; next }
+      if (in_b && /^#/) { in_b = 0; be = nl - 1; flush() }
+      if (!in_b) next
+      if (index($0, "> - *") == 1 && index($0, "* ← ") > 0) { flush(); fe = 1; en = substr($0, 6); en = substr(en, 1, index(en, "*") - 1); et = $0; ec = substr($0, 3); next }
+      if (en != "" && index($0, ">   ") == 1) { et = et " " $0; c = $0; sub(/^>[ \t]*/, "", c); ec = ec " " c; next }
+      if (en != "") flush()
+      if (substr($0, 1, 1) == ">") { c = $0; sub(/^> ?/, "", c); NT = NT " " c; if (!fe) LD = LD " " c; next }
+      if (index($0, "- **") == 1) {
+        s = substr($0, 5); p = index(s, ":**"); lab = substr(s, 1, p - 1); rest = substr(s, p + 4)
+        if (substr(lab, 1, 1) == "[") { q = index(rest, " — "); r = index(rest, " ("); if (r > 0 && (q == 0 || r < q)) q = r; nm = (q > 0) ? substr(rest, 1, q - 1) : rest } else nm = lab
+        D[++nd] = nm; if (nm == "Departure day") { dep++; if (tolower($0) ~ /hotel/) hot++ }
+        DT[nd] = ""; t = $0; while (match(t, /\[[^]]*\]/)) { ph = tolower(substr(t, RSTART + 1, RLENGTH - 2)); t = substr(t, RSTART + RLENGTH); if (ph ~ /(^| )time$/) DT[nd] = DT[nd] (DT[nd] == "" ? "" : ",") ph }
+      }
+      next
+    }
+    /^### 3\. / { s3 = 1; next } s3 && /^### / { s3 = 0 }
+    s3 && index($0, "- the arrival line ← ") == 1   { na++; al = labels($0) }
+    s3 && index($0, "- the departure line ← ") == 1 { nd3++; dl = labels($0) }
+    s3 && index($0, "- the full-days line ← ") == 1 { nfd++; wfd = (index($0, rf) > 0) }
+    s3 && index($0, "- the total line ← ") == 1     { ntl++; wtl = (index($0, rt) > 0) }
+    END {
+      if (in_b) { be = nl; flush() }
+      printf "HEAD\t%d\n", heads + 0
+      for (i = 1; i <= nd; i++) printf "LINE\t%s\n", D[i]
+      for (i = 1; i <= ne; i++) {
+        printf "ENTRY\t%s\t%s\n", E[i], EL[i]
+        k = split(EL[i], lb, ",")
+        for (j = 1; j <= k; j++) { ok = 0; for (x = 1; x <= nl; x++) if ((x < bs || x > be) && substr(L[x], 1, 1) != ">" && index(L[x], lb[j]) > 0) { ok = 1; break }; if (!ok) printf "UNRES\t%s\t%s\n", E[i], lb[j] }
+      }
+      printf "DEP\t%d\t%d\n", dep + 0, hot + 0
+      printf "ADR\tarrival\t%d\t%s\nADR\tdeparture\t%d\t%s\n", na + 0, al, nd3 + 0, dl
+      printf "ADRREF\tfull\t%d\t%d\nADRREF\ttotal\t%d\t%d\n", nfd + 0, wfd + 0, ntl + 0, wtl + 0
+      for (i = 1; i <= nd; i++) printf "SHOWN\t%s\t%s\n", D[i], DT[i]
+      for (i = 1; i <= ne; i++) { cl = ""; p = index(ET[i], " shows "); if (p > 0) { cl = substr(ET[i], p + 7); q = index(cl, "."); if (q > 0) cl = substr(cl, 1, q - 1) }; printf "SHOWS\t%s\t%s\n", E[i], tms(cl) }
+      bt = sprintf("%c", 96); fl = ""; nsh = 0; shp = ""
+      for (x = 1; x <= nl; x++) if ((x < bs || x > be) && substr(L[x], 1, 1) != ">" && index(L[x], "Flight:") > 0) {
+        t = L[x]
+        while (match(t, /[A-Za-z][A-Za-z -]*: \[[^]]*\]/)) {
+          g = substr(t, RSTART, RLENGTH); t = substr(t, RSTART + RLENGTH); q = index(g, ": ["); fla = substr(g, 1, q); sh = substr(g, q + 2)
+          if (sh ~ /Date/ && !((fla, sh) in FSN)) { FSN[fla, sh] = 1; printf "FLT\t%s\t%s\n", fla, sh; if (!inl(fl, fla)) fl = fl (fl == "" ? "" : ",") fla; if (!(sh in SHN)) { SHN[sh] = 1; nsh++; shp = sh } }
+        }
+      }
+      lg = ""; ck = ""; m = split(al "," dl, xa, ",")
+      for (i = 1; i <= m; i++) if (xa[i] != "") { if (inl(fl, xa[i])) lg = lg (lg == "" ? "" : ",") xa[i]; else ck = ck (ck == "" ? "" : ",") xa[i] }
+      ns = 0; nsd = 0; s = sq(NT)
+      while (s != "") {
+        p = index(s, ". "); if (p == 0) { c = s; s = "" } else { c = substr(s, 1, p); s = substr(s, p + 2) }
+        ok = (nsh == 1 && lg != "" && ck != "" && index(c, bt shp bt) > 0 && index(c, "clock time") > 0)
+        m = split(lg, xa, ","); for (i = 1; i <= m; i++) if (!index(c, bt xa[i] bt)) ok = 0
+        m = split(ck, xa, ","); for (i = 1; i <= m; i++) if (!index(c, bt xa[i] bt)) ok = 0
+        if (ok) { ns++; if (index(c, od) > 0) nsd++ }
+      }
+      printf "SHAPE\t%d\t%d\t%d\n", nsh, ns, nsd
+      no = 0; nol = 0; for (i = 1; i <= ne; i++) if (E[i] == "Timezone delta") { no++; if (index(ET[i], uo) > 0) nol++ }
+      printf "OFFSET\t%d\t%d\n", no, nol
+      nsr = 0; nsb = 0; s = sq(LD)
+      while (s != "") {
+        p = index(s, ". "); if (p == 0) { c = s; s = "" } else { c = substr(s, 1, p); s = substr(s, p + 2) }
+        if (index(c, bt "/trip-record" bt) > 0) { nsr++; if (index(c, s1) > 0 && index(c, s2) > 0) nsb++ }
+      }
+      printf "SOURCE\t%d\t%d\n", nsr, nsb
+    }' "$1" "$2"
+}
+# tw2_verdict <report> — `ok`, or the first limb that failed.
+tw2_verdict() {
+  LC_ALL=C awk -F'\t' '
+    function srt(s,   a, n, i, j, t, o) { n = split(s, a, ","); for (i = 1; i <= n; i++) for (j = i + 1; j <= n; j++) if (a[j] < a[i]) { t = a[i]; a[i] = a[j]; a[j] = t }; o = ""; for (i = 1; i <= n; i++) o = o (i > 1 ? "," : "") a[i]; return o }
+    function inl(list, k,   xb, m, i) { m = split(list, xb, ","); for (i = 1; i <= m; i++) if (xb[i] == k) return 1; return 0 }
+    $1 == "HEAD" { h = $2 } $1 == "LINE" { nl++; ln[$2]++ } $1 == "ENTRY" { ne++; en[$2]++; el[$2] = $3; if ($3 == "") bare = bare " " $2 }
+    $1 == "UNRES" { un = un " " $2 ": " $3 } $1 == "DEP" { dep = $2; hot = $3 }
+    $1 == "ADR" { an[$2] = $3; al[$2] = $4 }
+    $1 == "SHAPE" { shn = $2; shs = $3; shd = $4 } $1 == "OFFSET" { ofn = $2; ofl = $3 } $1 == "SOURCE" { srn = $2; srb = $3 }
+    $1 == "ADRREF" { rn[$2] = $3; rw[$2] = $4 } $1 == "FLT" { fd[$2] = 1 }
+    $1 == "SHOWN" { sn[$2] = $3; if ($3 != "") nsn++ } $1 == "SHOWS" { sw[$2] = $3 }
+    END {
+      if (h != 1 || nl < 1) { print "population — the heading `### Effective Planning Days [DERIVED]` stands " h + 0 " time(s) and the block holds " nl + 0 " derived line(s), where once and at least one are owed"; exit }
+      if (ne != nl) { print "bijection — " nl " derived line(s) and " ne + 0 " entry(ies)"; exit }
+      for (k in ln) if (ln[k] != 1 || en[k] != 1) { print "bijection — `" k "` has " ln[k] + 0 " derived line(s) and " en[k] + 0 " entry(ies), where one each is owed"; exit }
+      for (k in en) if (!(k in ln)) { print "bijection — entry `" k "` names no derived line"; exit }
+      if (bare != "") { print "inputs — entry(ies)" bare " name no backticked input label"; exit }
+      if (un != "") { print "unresolved —" un " occur(s) on no line of the template outside the block'"'"'s quotes"; exit }
+      if (dep != 1 || hot != 0) { print "D-9 — " dep + 0 " Departure day line(s), " hot + 0 " carrying a hotel clause, where one and none are owed"; exit }
+      if (an["arrival"] != 1 || an["departure"] != 1) { print "oracle — ADR-028 § 3 carries " an["arrival"] + 0 " arrival and " an["departure"] + 0 " departure bullet(s), where one each is owed"; exit }
+      if (srt(el["Arrival day"]) != srt(al["arrival"])) { print "under-declared — entry `Arrival day` names [" el["Arrival day"] "] and ADR-028 § 3 names [" al["arrival"] "]"; exit }
+      if (srt(el["Departure day"]) != srt(al["departure"])) { print "under-declared — entry `Departure day` names [" el["Departure day"] "] and ADR-028 § 3 names [" al["departure"] "]"; exit }
+      if (rn["full"] != 1 || rn["total"] != 1 || rw["full"] != 1 || rw["total"] != 1) { print "oracle — ADR-028 § 3 carries " rn["full"] + 0 " full-days and " rn["total"] + 0 " total bullet(s), " rw["full"] + rw["total"] " of them stating its inputs by the reference the two entries below are derived from, where one each, so stated, is owed"; exit }
+      ef = ""; m = split(al["arrival"] "," al["departure"], xa, ","); for (i = 1; i <= m; i++) if ((xa[i] in fd) && !inl(ef, xa[i])) ef = ef (ef == "" ? "" : ",") xa[i]
+      if (ef == "") { print "oracle — no label of ADR-028 § 3'"'"'s arrival and departure bullets is one a Flight: line declares with a date, so its two dates name no label"; exit }
+      if (srt(el["Full planning days"]) != srt(ef)) { print "under-declared — entry `Full planning days` names [" el["Full planning days"] "] and ADR-028 § 3'"'"'s two dates are [" ef "]"; exit }
+      ex = ""; m = split(al["arrival"] "," al["departure"] "," ef, xa, ","); for (i = 1; i <= m; i++) if (xa[i] != "" && !inl(ex, xa[i])) ex = ex (ex == "" ? "" : ",") xa[i]
+      if (srt(el["Total"]) != srt(ex)) { print "under-declared — entry `Total` names [" el["Total"] "] and ADR-028 § 3'"'"'s every input of the other three lines is [" ex "]"; exit }
+      if (nsn < 1) { print "shows — no derived line shows a [… time] placeholder, where the arrival and departure lines show their times"; exit }
+      for (k in ln) if (srt(sn[k]) != srt(sw[k])) { print "shows — the `" k "` line shows [" sn[k] "] and its entry says it shows [" sw[k] "], where the two are owed equal"; exit }
+      if (shn != 1) { print "shape — the template'"'"'s Flight: lines declare " shn + 0 " dated shape(s) for their leg values, where one is owed"; exit }
+      if (shs != 1 || shd != 0) { print "shape — " shs + 0 " sentence(s) of the note read each leg label ADR-028 § 3 names in that shape and each other label it names as a clock time, " shd + 0 " of them also saying how a derived line writes a date, where one such sentence, of its own, is owed"; exit }
+      if (ofn != 1 || ofl != 1) { print "offset — the Timezone delta entry stands " ofn + 0 " time(s) and limits the line to annotations that carry an explicit UTC offset " ofl + 0 " time(s), where once and once are owed"; exit }
+      if (srn != 1 || srb != 1) { print "source — the note opens, before its first entry, with " srn + 0 " sentence(s) naming /trip-record and " srb + 0 " saying it reads the engine'"'"'s own template and never this copy, where one and one are owed"; exit }
+      print "ok"
+    }' <<<"$1"
+}
+
+TW2_R="$(tw2_report "$TW_TP" "$TW_ADR")"
+TW2_V="$(tw2_verdict "$TW2_R")"
+TW2_NL="$(LC_ALL=C awk -F'\t' '$1 == "LINE" { n++ } END { print n + 0 }' <<<"$TW2_R")"
+if [ "$TW2_V" = ok ]; then
+  PASS "TW2: the template's trip window carries $TW2_NL derived line(s) and one declaration entry for each, by name; every entry names its inputs by label and every label stands on a line of the template outside the note; the Arrival day and Departure day entries name exactly the labels ADR-028 § 3 names for those lines, read live, and the Full planning days and Total entries exactly the labels § 3's two dates and every input of the other lines derive from them; every time a derived line shows is one its entry says it shows; the departure line carries no hotel clause (D-9); and the note reads each leg value in the one shape the template's Flight: lines declare and each check time as a clock time, in a sentence of its own, limits the Timezone delta line to annotations with an explicit UTC offset, and opens by saying /trip-record reads the engine's own template and never this copy"
+else
+  FAIL "TW2: $TW2_V. templates/trip-context.template.md § Effective Planning Days [DERIVED] declares, per line, the inputs rule $TW_N recomputes it from (ADR-028 § 3), and a line declared with fewer inputs goes stale with no mark in the file"
+fi
+
+# ── TW2's controls, each on a COPY of the template. ──
+# tw2_ctl <id> <file> <expected reason head> <what changed>
+tw2_ctl() {
+  local v
+  v="$(tw2_verdict "$(tw2_report "$2" "$TW_ADR")")"
+  if [ -s "$2" ] && ! cmp -s "$TW_TP" "$2" && [ "${v%% —*}" = "$3" ]; then
+    PASS "$1: MUST FIRE — $4 in a copy of the template, and TW2 reads '$3': ${v#* — }"
+  else
+    FAIL "$1: MUST FIRE — $4 in a copy (copy differs: $(cmp -s "$TW_TP" "$2" && echo no || echo yes)); TW2 read '$v' where a '$3' finding is owed"
+  fi
+}
+TW2_C="$TW_WORK/tw2-heading.md"; LC_ALL=C awk '$0 == "### Effective Planning Days [DERIVED]" { $0 = "### Effective Planning Window [DERIVED]" } { print }' "$TW_TP" > "$TW2_C"
+tw2_ctl CTL-TW2-HEADING "$TW2_C" population "the block's heading renamed"
+TW2_C="$TW_WORK/tw2-drop.md"; LC_ALL=C awk 'index($0, "> - *Total* ← ") == 1 { d = 1; next } d && index($0, ">   ") == 1 { next } { d = 0; print }' "$TW_TP" > "$TW2_C"
+tw2_ctl CTL-TW2-DROP "$TW2_C" bijection "the *Total* entry deleted"
+TW2_C="$TW_WORK/tw2-phantom.md"; LC_ALL=C awk '!d && index($0, "> - *Arrival day* ← ") == 1 { sub(/`Check-in time:`/, "`Lands at:`"); d = 1 } { print }' "$TW_TP" > "$TW2_C"
+tw2_ctl CTL-TW2-PHANTOM "$TW2_C" unresolved "the Arrival day entry's \`Check-in time:\` renamed \`Lands at:\`"
+TW2_C="$TW_WORK/tw2-under.md"; LC_ALL=C awk '!d && index($0, "> - *Arrival day* ← ") == 1 { sub(/, and `Check-in time:`/, ""); d = 1 } { print }' "$TW_TP" > "$TW2_C"
+tw2_ctl CTL-TW2-UNDER "$TW2_C" under-declared "\`Check-in time:\` removed from the Arrival day entry"
+TW2_C="$TW_WORK/tw2-hotel.md"; LC_ALL=C awk 'index($0, "- **[Date]:** Departure day — ") == 1 { $0 = "- **[Date]:** Departure day — must depart hotel by [time] for [departure time] flight" } { print }' "$TW_TP" > "$TW2_C"
+tw2_ctl CTL-TW2-HOTEL "$TW2_C" D-9 "the departure line restored to its hotel clause"
+TW2_C="$TW_WORK/tw2-under-full.md"
+tw_swap "$TW_TP" "$TW2_C" $'> - *Full planning days* ← the `Arrives:` and `Departs:` dates the lines around it take:' $'> - *Full planning days* ← the `Arrives:` date the lines around it take:'
+tw2_ctl CTL-TW2-UNDER-FULL "$TW2_C" under-declared "\`Departs:\` removed from the Full planning days entry"
+TW2_C="$TW_WORK/tw2-under-total.md"
+tw_swap "$TW_TP" "$TW2_C" $'> - *Total* ← `Arrives:`, `Check-in time:`, `Departs:` and `Check-out time:`, every input' $'> - *Total* ← `Arrives:`, `Check-in time:` and `Departs:`, every input'
+tw2_ctl CTL-TW2-UNDER-TOTAL "$TW2_C" under-declared "\`Check-out time:\` removed from the Total entry"
+TW2_C="$TW_WORK/tw2-shows.md"
+tw_swap "$TW_TP" "$TW2_C" "- **[Date]:** Departure day — [departure time] flight; check-out [check-out time]" "- **[Date]:** Departure day — [departure time] flight; check-out [check-out time]; leave by [time]"
+tw2_ctl CTL-TW2-SHOWS "$TW2_C" shows "the departure line given a third, undeclared time, worded without the word hotel"
+# CTL-TW2-SHAPE, CTL-TW2-OFFSET, CTL-TW2-SOURCE — MUST FIRE: each of the declaration's three clauses put
+# back, alone, to the wording it replaced: the one universal shape sentence in place of the per-source
+# one; a delta line computed from the zones two abbreviations name; and a note that reads the trip's copy.
+TW2_C="$TW_WORK/tw2-shape.md"
+tw_swap "$TW_TP" "$TW2_C" $'> A leg\'s `Departs:` and `Arrives:` are read in the shape its flight line declares,\n> `[Day, Date, Time TZ]`; `Check-in time:` and `Check-out time:` are read as the clock time\n> their value opens with. A derived line writes a date as the month\'s three-letter name,\n> the day and the weekday in brackets. A value in none of these shapes is not an input this\n> block can read.' $'> A date is written as the month\'s three-letter name, the day and the weekday in\n> brackets; a time is the clock time a value opens with.\n> A value in no declared shape is not an input this block can read.'
+tw2_ctl CTL-TW2-SHAPE "$TW2_C" shape "the per-source shape sentence put back to one universal sentence"
+TW2_C="$TW_WORK/tw2-offset.md"
+tw_swap "$TW_TP" "$TW2_C" $'>   the second, the hours between them and the direction. It is computed only where both\n>   annotations carry an explicit UTC offset; where an annotation it did not change carries\n>   none, the line is not recomputable and that annotation is the input named.' $'>   the second, the hours between them and the direction, computed from the two zone\n>   abbreviations as the zones they name, whatever offset each\n>   implies on the leg\'s date.'
+tw2_ctl CTL-TW2-OFFSET "$TW2_C" offset "the Timezone delta entry's explicit-UTC-offset limit put back to a computation from two abbreviations"
+TW2_C="$TW_WORK/tw2-source.md"
+tw_swap "$TW_TP" "$TW2_C" "the engine's own template and never from this copy" "this block as it stands in the trip's file"
+tw2_ctl CTL-TW2-SOURCE "$TW2_C" source "the note's opening put back to reading the block as it stands in the trip's file"
+
+
+# ── TW3 — the writer is named, `fact` carries the recompute, and every citation names rule N. ──
+# tw3_report <charter> <adr> <skill> <conduct> <N> — tab-separated records:
+#   ROWS <table rows> <rows with § 1's Block> <writer equal> <condition equal> <§ 1 row found>
+#   ROUTE <route rows> <names rule N> <stale words>
+#   TABLE <headings> <rows> <rows naming the block>
+#   READS <Reads lines> <names the block> <names the template>
+#   SITE <file> <rule cited>     one per citation of a standing rule in a sentence that carries
+#                                `recompute` or `Effective Planning Days`
+#   NSITE <fact sites> <conduct sites>
+tw3_report() {
+  LC_ALL=C awk -v N="$5" -v AD="$2" -v CH="$1" -v SK="$3" -v IC="$4" '
+    function trim(s) { gsub(/^[ \t]+|[ \t]+$/, "", s); return s }
+    function cells(s, out,   k, i) { sub(/^[ \t]*\|/, "", s); sub(/\|[ \t]*$/, "", s); k = split(s, out, "|"); for (i = 1; i <= k; i++) out[i] = trim(out[i]); return k }
+    function sites(txt, f,   s, p, c, t, n) {
+      gsub(/[ \t]+/, " ", txt); s = txt
+      while (s != "") {
+        p = index(s, ". "); if (p == 0) { c = s; s = "" } else { c = substr(s, 1, p); s = substr(s, p + 2) }
+        if (index(c, "recompute") || index(c, "Effective Planning Days")) {
+          t = c
+          while (match(t, /standing rule [0-9]+/)) { n = substr(t, RSTART + 14, RLENGTH - 14); printf "SITE\t%s\t%s\n", f, n; NS[f]++; t = substr(t, RSTART + RLENGTH) }
+        }
+      }
+    }
+    FILENAME == AD {
+      if (index($0, "### 1. ") == 1) { a1 = 1; next } if (a1 && /^### /) a1 = 0
+      if (a1 && /^> \|/) { l = substr($0, 3); if (l !~ /^\|[-| :]+\|$/ && index(l, "| Block |") != 1) { qr++; cells(l, QC); QC3 = QC[3]; sub(/standing rule 15/, "standing rule " N, QC3) } }
+      next
+    }
+    FILENAME == CH {
+      if (/^### Write ownership/) { w = 1; next } if (w && /^### /) w = 0
+      if (w && /^\|/ && $0 !~ /^\|[-| :]+\|$/) { if (!hd) { hd = 1; next }; nr++; cells($0, C); if (C[1] == QC[1]) { nb++; if (C[2] == QC[2]) we++; if (C[3] == QC3) ce++ } }
+      next
+    }
+    FILENAME == SK {
+      if (/^## fact /) { f = 1; next } if (f && /^## /) f = 0
+      if (!f) next
+      FT = FT " " $0
+      if (index($0, "| `[DERIVED]` |") == 1) { ro++; if (index($0, "standing rule " N " ") || index($0, "standing rule " N "'"'"'")) rn++; if (index($0, "no writer exists") || index($0, "name no command")) rs++ }
+      if (index($0, "**Cross-block consequences") == 1) { th++; tb = 1; tr = 0; next }
+      if (tb == 1) { if (/^\|/) { tr++; if (tr > 2) { trw++; if (index($0, "### Effective Planning Days")) tbe++ } } else if (tr > 0) tb = 2 }
+      if (index($0, "**Reads:**") == 1) { rl++; if (index($0, "### Effective Planning Days")) rb++; if (index($0, "templates/trip-context.template.md")) rt++ }
+      next
+    }
+    FILENAME == IC {
+      if (/^## On a block-owned form/) { c = 1; next } if (c && /^## /) c = 0
+      if (c) CT = CT " " $0
+      next
+    }
+    END {
+      printf "ROWS\t%d\t%d\t%d\t%d\t%d\n", nr, nb, we, ce, qr
+      printf "ROUTE\t%d\t%d\t%d\n", ro, rn, rs
+      printf "TABLE\t%d\t%d\t%d\n", th, trw, tbe
+      printf "READS\t%d\t%d\t%d\n", rl, rb, rt
+      sites(FT, "fact"); sites(CT, "conduct")
+      printf "NSITE\t%d\t%d\n", NS["fact"], NS["conduct"]
+    }' "$2" "$1" "$3" "$4"
+}
+# tw3_verdict <report> <N> — `ok`, or the first limb that failed.
+tw3_verdict() {
+  LC_ALL=C awk -F'\t' -v N="$2" '
+    $1 == "ROWS" { split($0, r, "\t") } $1 == "ROUTE" { split($0, o, "\t") } $1 == "TABLE" { split($0, t, "\t") }
+    $1 == "READS" { split($0, d, "\t") } $1 == "NSITE" { split($0, s, "\t") }
+    $1 == "SITE" && $3 != N { bad = bad " " $2 " cites rule " $3 ";" }
+    END {
+      if (N + 0 < 1) { print "no rule — TW1 found no rule, so there is no number to check against"; exit }
+      if (r[2] < 1 || r[6] != 1) { print "population — § Write ownership read " r[2] + 0 " row(s) and ADR-028 § 1 " r[6] + 0 " quoted row(s), where at least one and one are owed"; exit }
+      if (r[3] != 1) { print "row — " r[3] + 0 " row(s) of § Write ownership carry ADR-028 § 1'"'"'s Block cell, where one is owed"; exit }
+      if (r[4] != 1 || r[5] != 1) { print "row — the Block matches, but the Writer cell matches " r[4] + 0 " and the Condition cell, with standing rule " N ", " r[5] + 0 " time(s)"; exit }
+      if (o[2] != 1) { print "route — " o[2] + 0 " `[DERIVED]` route row(s) in § fact, where one is owed"; exit }
+      if (o[3] != 1 || o[4] != 0) { print "route — the `[DERIVED]` route row names standing rule " N " " o[3] + 0 " time(s) and carries the no-writer words " o[4] + 0 " time(s), where 1 and 0 are owed"; exit }
+      if (t[2] != 1 || t[3] < 1) { print "table — the cross-block heading stands " t[2] + 0 " time(s) over " t[3] + 0 " row(s), where once and at least one are owed"; exit }
+      if (t[4] != 0) { print "table — " t[4] " cross-block row(s) still name `### Effective Planning Days`, a consequence the act now performs"; exit }
+      if (d[2] != 1 || d[3] != 1 || d[4] != 1) { print "reads — " d[2] + 0 " **Reads:** line(s) in § fact, naming the block " d[3] + 0 " and the template " d[4] + 0 " time(s), where one, 1 and 1 are owed"; exit }
+      if (s[2] < 4 || s[3] < 2) { print "cite — " s[2] + 0 " citing site(s) in § fact and " s[3] + 0 " in the conduct section, where at least 4 and 2 are owed: the **Reads:** line, the route row, step 3 and the replacement write shape in § fact, and both sentences of the conduct section"; exit }
+      if (bad != "") { print "cite —" bad " where every site names rule " N; exit }
+      print "ok"
+    }' <<<"$1"
+}
+
+TW3_R="$(tw3_report "$TW_CH" "$TW_ADR" "$TW_SK" "$TW_IC" "$TW_N")"
+TW3_V="$(tw3_verdict "$TW3_R" "$TW_N")"
+TW3_NS="$(LC_ALL=C awk -F'\t' '$1 == "NSITE" { print $2 " in § fact and " $3 " in the conduct section" }' <<<"$TW3_R")"
+if [ "$TW3_V" = ok ]; then
+  PASS "TW3: § Write ownership carries ADR-028 § 1's row once, naming /trip-record under standing rule $TW_N; § fact's [DERIVED] route row names rule $TW_N and no longer says no writer exists; its cross-block table names no trip-window consequence; its **Reads:** line names the block and the template; and every citation of a standing rule beside the recompute — $TW3_NS, no fewer than the 4 and 2 sites it stands at — names rule $TW_N, the number TW1 found"
+else
+  FAIL "TW3: $TW3_V. ADR-028 § 1's row names the writer, and every surface that names the rule names it by the number it lands under"
+fi
+
+# ── TW3's controls, each on a COPY of one file, the others real. ──
+# tw3_ctl <id> <charter> <skill> <expected reason head> <what changed> [<conduct>]
+tw3_ctl() {
+  local v dif=no ic="${6:-$TW_IC}"
+  v="$(tw3_verdict "$(tw3_report "$2" "$TW_ADR" "$3" "$ic" "$TW_N")" "$TW_N")"
+  cmp -s "$TW_CH" "$2" || dif=yes
+  cmp -s "$TW_SK" "$3" || dif=yes
+  cmp -s "$TW_IC" "$ic" || dif=yes
+  if [ -s "$2" ] && [ -s "$3" ] && [ -s "$ic" ] && [ "$dif" = yes ] && [ "${v%% —*}" = "$4" ]; then
+    PASS "$1: MUST FIRE — $5 in a copy, and TW3 reads '$4': ${v#* — }"
+  else
+    FAIL "$1: MUST FIRE — $5 in a copy; TW3 read '$v' where a '$4' finding is owed"
+  fi
+}
+TW3_C="$TW_WORK/tw3-row.md"; LC_ALL=C awk 'index($0, "| `[DERIVED]` — `### Effective Planning Days` |") == 1 { $0 = "| `[DERIVED]` block — `### Effective Planning Days` | **no writer exists** | Not a gap to fill opportunistically. The template forbids manual editing and the enrichment agent declines the write in terms. Until an owner is decided this block is read-only to every command, `/trip-record` included; staleness is reported, never repaired in place. |" } { print }' "$TW_CH" > "$TW3_C"
+tw3_ctl CTL-TW3-ROW "$TW3_C" "$TW_SK" row "row 4 restored to its no-writer text"
+TW3_C="$TW_WORK/tw3-num.md"; LC_ALL=C awk -v n="$TW_N" 'index($0, "| `[DERIVED]` — `### Effective Planning Days` |") == 1 { sub("standing rule " n ",", "standing rule " (n - 1) ",") } { print }' "$TW_CH" > "$TW3_C"
+tw3_ctl CTL-TW3-NUM "$TW3_C" "$TW_SK" row "row 4's standing rule $TW_N set to $((TW_N - 1))"
+TW3_C="$TW_WORK/tw3-route.md"; LC_ALL=C awk 'index($0, "| `[DERIVED]` |") == 1 { $0 = "| `[DERIVED]` | **no writer exists.** Report staleness and **name no command**; this verb writes zero bytes of such a block |" } { print }' "$TW_SK" > "$TW3_C"
+tw3_ctl CTL-TW3-ROUTE "$TW_CH" "$TW3_C" route "fact's [DERIVED] route row restored"
+TW3_C="$TW_WORK/tw3-table.md"; LC_ALL=C awk 'index($0, "**Cross-block consequences") == 1 { sub(/^\*\*Cross-block consequences/, "**Cross-block effects") } { print }' "$TW_SK" > "$TW3_C"
+tw3_ctl CTL-TW3-TABLE "$TW_CH" "$TW3_C" table "the cross-block heading renamed"
+TW3_C="$TW_WORK/tw3-cite.md"; LC_ALL=C awk -v n="$TW_N" '!d && index($0, "standing rule " n "'"'"'s recompute of `### Effective Planning Days`, in the act") { sub("standing rule " n "'"'"'s", "standing rule " (n - 1) "'"'"'s"); d = 1 } { print }' "$TW_SK" > "$TW3_C"
+tw3_ctl CTL-TW3-CITE "$TW_CH" "$TW3_C" cite "step 3's citation of standing rule $TW_N set to $((TW_N - 1))"
+# CTL-TW3-FLOOR-FACT, CTL-TW3-FLOOR-CONDUCT — MUST FIRE: one citing site deleted from each file, so a
+# site that disappears is a FAIL and not a smaller population that still names the right number.
+TW3_C="$TW_WORK/tw3-floor-fact.md"
+tw_swap "$TW_SK" "$TW3_C" "  writing**, and change only that field's lines — where the field is a declared input of"$'\n'"  \`### Effective Planning Days\`, standing rule $TW_N's recompute of the lines it feeds is that rule's write." "  writing**, and change only that field's lines."
+tw3_ctl CTL-TW3-FLOOR-FACT "$TW_CH" "$TW3_C" cite "the replacement write shape's citation of standing rule $TW_N deleted"
+TW3_C="$TW_WORK/tw3-floor-conduct.md"
+tw_swap "$TW_IC" "$TW3_C" "as standing rule $TW_N's own write" "as its own write"
+tw3_ctl CTL-TW3-FLOOR-CONDUCT "$TW_CH" "$TW_SK" cite "the conduct sentence's second citation of standing rule $TW_N deleted" "$TW3_C"
+
+
+# ── TW4 — the surfaces the row change reconciled still say so. ──
+# The population is every tracked markdown file outside the records (`reference/adr/`, `CHANGELOG.md`)
+# and the specimens (`examples/`, whose window lines keep their hand-written text by design).
+# WHAT THIS ARM DOES NOT ESTABLISH. It does not sweep that population for a claim that the `[DERIVED]`
+# block has no writer, though that is the claim the row change made false: no such claim about the
+# trip window stands today, but the sweep is not built yet, so `/trip-new`'s ground is graded alone. A
+# sweep must be scoped to the trip window, because a `[DERIVED]` block an earlier template left in a
+# trip truly has no writer, and erase's reach table says so.
+# Nor does it grade `CLAUDE.md` Step 1's default-paragraph sentence.
+# tw4_report <scheduling> <trip-new> <swap-path> <swap-copy> — tab-separated records, the population
+# read with <swap-path>, where it is a member, replaced by <swap-copy>:
+#   POP <files>                   population files read
+#   HOTEL <file> <n>              a member whose text, whitespace-joined, carries the departure line's
+#                                 retired hotel clause, `must depart hotel by`
+#   SCHED <inputs> <item 3s> <n>  scheduling's `## Input` sections, the item 3s in them, and how often
+#                                 those name `Recommended hotel departure:`
+#   NEW <phrases> <named>         `/trip-new`'s phrases giving the `[DERIVED]` block a writer, and how many
+#                                 of them name `/trip-record`
+tw4_report() {
+  local f p=()
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    if [ "$f" = "$3" ]; then p+=("$4"); else p+=("$ROOT/$f"); fi
+  done <<<"$TW4_PL"
+  if [ "${#p[@]}" -gt 0 ]; then
+    LC_ALL=C awk -v hc='must depart hotel by' -v rp="$ROOT/" -v sp="$4" -v sr="$3" '
+      function cnt(s, t,   n, q) { n = 0; while ((q = index(s, t)) > 0) { n++; s = substr(s, q + length(t)) }; return n }
+      function emit(   s, k, nm) { s = tx; gsub(/[ \t]+/, " ", s); k = cnt(s, hc); nm = cur; if (nm == sp) nm = sr " (its copy)"; else if (index(nm, rp) == 1) nm = substr(nm, length(rp) + 1); if (k > 0) printf "HOTEL\t%s\t%d\n", nm, k }
+      FNR == 1 { if (cur != "") emit(); cur = FILENAME; tx = ""; nf++ }
+      { tx = tx " " $0 }
+      END { if (cur != "") emit(); printf "POP\t%d\n", nf + 0 }' "${p[@]}"
+  else
+    printf 'POP\t0\n'
+  fi
+  LC_ALL=C awk 'BEGIN { bt = sprintf("%c", 96); rh = bt "Recommended hotel departure:" bt }
+    function cnt(s, t,   n, q) { n = 0; while ((q = index(s, t)) > 0) { n++; s = substr(s, q + length(t)) }; return n }
+    /^## / { inp = ($0 == "## Input"); if (inp) ni++; it = 0; next }
+    inp && /^[0-9]+\. / { it = (index($0, "3. ") == 1); if (it) n3++ }
+    inp && it { t3 = t3 " " $0 }
+    END { gsub(/[ \t]+/, " ", t3); printf "SCHED\t%d\t%d\t%d\n", ni + 0, n3 + 0, cnt(t3, rh) }' "$1"
+  LC_ALL=C awk 'BEGIN { bt = sprintf("%c", 96); g = "the " bt "[DERIVED]" bt " block to "; w = g bt "/trip-record" bt }
+    function cnt(s, t,   n, q) { n = 0; while ((q = index(s, t)) > 0) { n++; s = substr(s, q + length(t)) }; return n }
+    { tx = tx " " $0 }
+    END { gsub(/[ \t]+/, " ", tx); printf "NEW\t%d\t%d\n", cnt(tx, g), cnt(tx, w) }' "$2"
+}
+# tw4_verdict <report> — `ok`, or the first limb that failed.
+tw4_verdict() {
+  LC_ALL=C awk -F'\t' '
+    $1 == "POP" { pop = $2 } $1 == "HOTEL" { hot = hot " " $2 " (" $3 ")" }
+    $1 == "SCHED" { si = $2; s3 = $3; sn = $4 } $1 == "NEW" { no = $2; nn = $3 }
+    END {
+      if (pop < 1) { print "population — the sweep read " pop + 0 " tracked markdown file(s) outside the records and the specimens, where at least one is owed"; exit }
+      if (hot != "") { print "hotel —" hot " carry the retired departure-line hotel clause, where the departure day now ends at transport'"'"'s Recommended hotel departure: (D-9)"; exit }
+      if (si != 1 || s3 != 1) { print "sched — agents/03-scheduling.md carries " si + 0 " ## Input section(s) and " s3 + 0 " item 3(s) in it, where one each is owed"; exit }
+      if (sn < 1) { print "sched — agents/03-scheduling.md ## Input item 3 names Recommended hotel departure: 0 time(s), so the departure day has no stated end (D-9)"; exit }
+      if (no < 1) { print "trip-new — skills/trip-new/SKILL.md gives the [DERIVED] block a writer in 0 phrase(s), where its ground names one"; exit }
+      if (nn != no) { print "trip-new — " no " phrase(s) of skills/trip-new/SKILL.md give the [DERIVED] block a writer and " nn + 0 " of them name /trip-record, the writer § Write ownership names"; exit }
+      print "ok"
+    }' <<<"$1"
+}
+
+TW4_ALL="$(cd "$ROOT" && git ls-files -- '*.md' 2>/dev/null)"
+TW4_PL="$(LC_ALL=C awk 'index($0, "reference/adr/") != 1 && $0 != "CHANGELOG.md" && index($0, "examples/") != 1' <<<"$TW4_ALL")"
+TW4_SC="$ROOT/agents/03-scheduling.md"; TW4_TN="$ROOT/skills/trip-new/SKILL.md"
+TW4_R="$(tw4_report "$TW4_SC" "$TW4_TN" - -)"
+TW4_V="$(tw4_verdict "$TW4_R")"
+TW4_NP="$(LC_ALL=C awk -F'\t' '$1 == "POP" { print $2 + 0 }' <<<"$TW4_R")"
+if [ "$TW4_V" = ok ]; then
+  PASS "TW4: none of the $TW4_NP tracked markdown file(s) outside the records and the specimens carries the departure line's retired hotel clause; agents/03-scheduling.md § Input item 3 ends the departure day at transport's Recommended hotel departure:; and /trip-new's ground gives the [DERIVED] block to /trip-record, the writer § Write ownership names. A claim elsewhere that the block has no writer is not swept here, as this arm's comment says"
+else
+  FAIL "TW4: $TW4_V. The row change reconciled each of these surfaces in the same change, and one put back says what the template and the charter no longer say"
+fi
+
+# ── TW4's controls, each on a COPY of one file, the others real. ──
+# tw4_ctl <id> <scheduling> <trip-new> <swap-path> <swap-copy> <expected reason head> <what changed>
+tw4_ctl() {
+  local v dif=no
+  v="$(tw4_verdict "$(tw4_report "$2" "$3" "$4" "$5")")"
+  cmp -s "$TW4_SC" "$2" || dif=yes
+  cmp -s "$TW4_TN" "$3" || dif=yes
+  [ "$4" = - ] || cmp -s "$ROOT/$4" "$5" || dif=yes
+  if [ "$dif" = yes ] && [ "${v%% —*}" = "$6" ]; then
+    PASS "$1: MUST FIRE — $7 in a copy, and TW4 reads '$6': ${v#* — }"
+  else
+    FAIL "$1: MUST FIRE — $7 in a copy (copy differs: $dif); TW4 read '$v' where a '$6' finding is owed"
+  fi
+}
+TW4_C="$TW_WORK/tw4-hotel.md"
+tw_swap "$ROOT/reference/data-model.md" "$TW4_C" '*"Departure day — [departure time] flight; check-out [check-out time]."*' '*"Departure day — must depart hotel by [time] for [departure time] flight."*'
+tw4_ctl CTL-TW4-HOTEL "$TW4_SC" "$TW4_TN" reference/data-model.md "$TW4_C" hotel "the data model's quotation of the departure line put back to its hotel clause"
+TW4_C="$TW_WORK/tw4-sched.md"
+tw_swap "$TW4_SC" "$TW4_C" $'   is present for all of it. **The departure day\'s usable window ends at the anchor\n   stream\'s `Recommended hotel departure:` in `outputs/transport-brief.md`**, and at\n   no time read from this block or from a leg\'s `Notes:`. Where the brief is absent\n   or carries no anchor departure stream, the absent-brief rule below holds: say so\n   on that day and give its window no end time' '   is present for all of it'
+tw4_ctl CTL-TW4-SCHED "$TW4_C" "$TW4_TN" - - sched "scheduling's ## Input item 3 put back to end at the baseline sentence"
+TW4_C="$TW_WORK/tw4-new.md"
+tw_swap "$TW4_TN" "$TW4_C" $'the `[DERIVED]` block to `/trip-record`,' $'the `[DERIVED]` block to no writer at all,'
+tw4_ctl CTL-TW4-NEW "$TW4_SC" "$TW4_C" - - trip-new "/trip-new's ground put back to give the [DERIVED] block no writer"
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RS — the group rosters that DESCRIBE this suite, asserted against the run.

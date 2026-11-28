@@ -310,7 +310,11 @@ Read trip-context.md fully before producing output. Read in this order:
 2. Group composition — understand the energy range and any split requirements
 3. Effective Planning Days — the anchor origin's window, and this trip's baseline
    day shape. Read it as the baseline, **not** as a guarantee that every traveler
-   is present for all of it
+   is present for all of it. **The departure day's usable window ends at the anchor
+   stream's `Recommended hotel departure:` in `outputs/transport-brief.md`**, and at
+   no time read from this block or from a leg's `Notes:`. Where the brief is absent
+   or carries no anchor departure stream, the absent-brief rule below holds: say so
+   on that day and give its window no end time
 4. `outputs/traveler-presence.md`, read beside this file — who is present on which
    days, with each traveler's own window, timezone delta and partial days. **This is
    the window limb's source; the block above is not.** Where the file does not exist

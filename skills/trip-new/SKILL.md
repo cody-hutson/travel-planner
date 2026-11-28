@@ -505,7 +505,7 @@ establishes **nothing**: omission is not prohibition, so no bound below is claim
   by a later slice.
 - **It writes no `[ENRICH]` block, no `[DERIVED]` block, and no lifecycle marker line.** A **rule**,
   resting on `CLAUDE.md` § *Write ownership*: the `[ENRICH]` fields belong to the enrichment agent,
-  the `[DERIVED]` block to no writer at all, and the `**Lifecycle:**` line to `/trip-decommission`.
+  the `[DERIVED]` block to `/trip-record`, and the `**Lifecycle:**` line to `/trip-decommission`.
 - **It writes only under `trips/<slug>/`, and only files that do not already exist.** A **rule**, and
   the one that satisfies `ADR-007` § 2, **bound 5**. It is the create-only rule stated at the top of
   this file, restated here as a bound rather than re-derived — and, as there, it holds on the rule
