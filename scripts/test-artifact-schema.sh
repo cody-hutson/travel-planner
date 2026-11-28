@@ -9705,8 +9705,9 @@ st_cf_mustnotfire "CTL-ST-CF-SENS-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 1 "th
 # the Condition cell of the first row naming no writer. A class read from the Writer and Block
 # cells alone does not move, and neither does any realized verdict. Since the trip window's row names
 # /trip-record, that row is row 9, a block not listed above, which no region reaches: the class
-# vector discriminates there, and the verdict and projection limbs hold by construction. A reader that
-# moved a verdict through a Condition cell would move the row's class first, which the vector sees.
+# vector discriminates there, and the verdict limb holds by construction. A reader that moved a verdict
+# through a Condition cell would move the row's class first, which the vector sees. The projection's
+# specificity is measured below, on a no-writer row that control plants for itself.
 ST_CF_AR="$(awk -F'\t' '$1 == "ROW" && $3 == "AGENT" { print $2; exit }' <<<"$ST_CF_RG")"
 ST_CF_NR="$(awk -F'\t' '$1 == "ROW" && $3 == "NONE" { print $2; exit }' <<<"$ST_CF_RG")"
 ST_CF_AS="$(awk -F'\t' -v r="$ST_CF_AR" '$1 == "ROW" && $2 == r { if (match($9, /`agents\/[^`]+\.md`/)) print substr($9, RSTART, RLENGTH); exit }' <<<"$ST_CF_RG")"
@@ -9736,17 +9737,39 @@ else
   FAIL "CTL-ST-CF-CONDITION-CELL[$ST_CF_TAG]: MUST NOT FIRE — with the agent contract span moved between Condition cells on a COPY of the charter (source row ${ST_CF_AR:-none} $ST_CF_CA, target row ${ST_CF_NR:-none} $ST_CF_CN), the classes read [${ST_CF_CL1% }] against [${ST_CF_CL0% }] and the findings [${ST_CF_CT1% }] against [${ST_CF_CT0% }], where both are owed unchanged. A class read from the Condition column moves a verdict with the explanation of a row rather than its declaration"
 fi
 
-# ── CTL-ST-CF-PROJ-CONDITION-CELL — MUST NOT FIRE, the same specificity on the PROJECTION. Over the charter
-# copy the arm above built, this member's derived block is byte-identical to its block over the real
-# charter: the column that explains a row cannot move what the interviewer reads.
-ST_CF_PJC0="$(st_cf_proj_block "$ROOT" "$ST_CF_REL" "$ST_CF_OWN")"; ST_CF_PJC1="$(st_cf_proj_block "$ROOT" "$ST_CF_REL" "$ST_CF_CX")"
+# ── CTL-ST-CF-PROJ-CONDITION-CELL — MUST NOT FIRE, the same specificity on the PROJECTION. The arm above
+# writes the span into the first row naming no writer, which is row 9 since the trip window's row names
+# /trip-record, and row 9 projects no region — so its copy shows the projection nothing, and this
+# control, following it there with its body unchanged, measured nothing. It plants its own target
+# instead, on COPIES of the charter: the first addressed YES row — the row CTL-ST-CF-PROJ-FLIP flips —
+# has its Writer cell set to name no writer, so its regions read EXCLUDED (no-writer) in the block
+# derived over that copy; a second copy also moves the agent contract span from row AR's Condition
+# cell to the planted row's. The two blocks are byte-identical: the column that explains a row cannot
+# move what the interviewer reads. A plant whose regions do not read EXCLUDED measures nothing and FAILs.
+ST_CF_PCR="$(awk -F'\t' '$1 == "ROW" && $4 == "YES" && $5 == "addressed" { print $2; exit }' <<<"$ST_CF_RG")"
+ST_CF_PCP="$(st_cf_charter_fixture proj-condition-plant)"
+if [ -n "$ST_CF_PCR" ]; then st_cf_cell "$ST_CF_PCP" "$(st_cf_rowline "$ST_CF_PCR")" "$ST_CF_WCOL" set '**no writer exists**'; fi
+ST_CF_PCM="$ST_CF_DIR/proj-condition-moved-charter.md"; cp "$ST_CF_PCP" "$ST_CF_PCM"
+if [ -n "$ST_CF_PCR" ] && [ -n "$ST_CF_AR" ] && [ -n "$ST_CF_AS" ]; then
+  ST_CF_C=1
+  while [ "$ST_CF_C" -le "${ST_CF_NCOL:-0}" ]; do
+    { [ "$ST_CF_C" = "$ST_CF_BCOL" ] || [ "$ST_CF_C" = "$ST_CF_WCOL" ]; } || { st_cf_cell "$ST_CF_PCM" "$(st_cf_rowline "$ST_CF_AR")" "$ST_CF_C" drop "$ST_CF_AS"; ST_CF_PLC="$ST_CF_C"; }
+    ST_CF_C=$((ST_CF_C + 1))
+  done
+  st_cf_cell "$ST_CF_PCM" "$(st_cf_rowline "$ST_CF_PCR")" "${ST_CF_PLC:-0}" add " Contract: $ST_CF_AS."
+fi
+ST_CF_PCG="$(ft_regions "$ST_CF_FILE" "$ST_CF_PCM" 2>/dev/null)"
+ST_CF_PCA="$(awk -F'\t' -v r="$ST_CF_AR" -v s="$ST_CF_AS" '$1 == "ROW" && $2 == r { print (index($11, s) ? "kept" : "gone"); exit }' <<<"$ST_CF_PCG")"
+ST_CF_PCN="$(awk -F'\t' -v r="$ST_CF_PCR" -v s="$ST_CF_AS" '$1 == "ROW" && $2 == r { print (index($11, s) ? "carried" : "absent"); exit }' <<<"$ST_CF_PCG")"
+ST_CF_PJC0="$(st_cf_proj_block "$ROOT" "$ST_CF_REL" "$ST_CF_PCP")"; ST_CF_PJC1="$(st_cf_proj_block "$ROOT" "$ST_CF_REL" "$ST_CF_PCM")"
 ST_CF_PJCN="$(st_cf_proj_rows "$ST_CF_PJC0")"
-if [ -z "$ST_CF_AR" ] || [ -z "$ST_CF_NR" ] || [ -z "$ST_CF_AS" ]; then
-  VACUOUS "CTL-ST-CF-PROJ-CONDITION-CELL[$ST_CF_TAG]: there is no Condition-cell citation to move (CTL-ST-CF-CONDITION-CELL names why), so the projection's specificity has no input here"
-elif ! cmp -s "$ST_CF_OWN" "$ST_CF_CX" && [ "${ST_CF_PJCN:-0}" -gt 0 ] && [ "$ST_CF_PJC1" = "$ST_CF_PJC0" ]; then
-  PASS "CTL-ST-CF-PROJ-CONDITION-CELL[$ST_CF_TAG]: MUST NOT FIRE — over the charter copy whose agent contract span moved from row $ST_CF_AR's Condition cell to row $ST_CF_NR's, this member's derived region-contract block is byte-identical to its block over the real charter, over $ST_CF_PJCN region row(s). What the interviewer reads moves only with a row's Writer or Block cell"
+ST_CF_PJCX="$(awk -v r="$ST_CF_PCR" '{ s = $0; gsub(/\\\|/, "\035", s); k = split(s, f, "|"); if (k >= 11 && f[3] ~ /^[ \t]*[0-9]+[ \t]*$/) { c = f[7]; gsub(/[ \t]/, "", c); if (c == r) { n++; if (f[9] ~ /EXCLUDED \(no-writer\)/) x++ } } } END { print n + 0, x + 0 }' <<<"$ST_CF_PJC0")"
+if [ -z "$ST_CF_PCR" ] || [ -z "$ST_CF_AR" ] || [ -z "$ST_CF_AS" ]; then
+  VACUOUS "CTL-ST-CF-PROJ-CONDITION-CELL[$ST_CF_TAG]: the writer table carries no addressed YES row to plant a no-writer row on (${ST_CF_PCR:-none}) or no AGENT row with a contract span (${ST_CF_AR:-none}), so the projection's specificity has no input here"
+elif ! cmp -s "$ST_CF_OWN" "$ST_CF_PCP" && [ "${ST_CF_PJCX%% *}" -gt 0 ] && [ "${ST_CF_PJCX%% *}" = "${ST_CF_PJCX##* }" ] && [ "$ST_CF_PCA" = gone ] && [ "$ST_CF_PCN" = carried ] && [ "${ST_CF_PJCN:-0}" -gt 0 ] && [ "$ST_CF_PJC1" = "$ST_CF_PJC0" ]; then
+  PASS "CTL-ST-CF-PROJ-CONDITION-CELL[$ST_CF_TAG]: MUST NOT FIRE — on a COPY of the charter whose row $ST_CF_PCR is planted to name no writer, its ${ST_CF_PJCX%% *} region row(s) read EXCLUDED (no-writer); with the agent contract span $ST_CF_AS also moved from row $ST_CF_AR's Condition cell to row $ST_CF_PCR's, this member's derived region-contract block is byte-identical to the planted copy's, over $ST_CF_PJCN region row(s). What the interviewer reads moves only with a row's Writer or Block cell"
 else
-  FAIL "CTL-ST-CF-PROJ-CONDITION-CELL[$ST_CF_TAG]: MUST NOT FIRE — with the agent contract span moved between Condition cells on a copy of the charter, this member's derived block $( [ "$ST_CF_PJC1" = "$ST_CF_PJC0" ] && echo 'stayed identical' || echo CHANGED ) over ${ST_CF_PJCN:-0} region row(s), where an identical, non-empty block is owed"
+  FAIL "CTL-ST-CF-PROJ-CONDITION-CELL[$ST_CF_TAG]: MUST NOT FIRE — with row ${ST_CF_PCR:-none} planted to name no writer on a copy of the charter (its [region rows, EXCLUDED] read [$ST_CF_PJCX], where every one EXCLUDED is owed) and the agent contract span moved between Condition cells on a second copy (source row ${ST_CF_AR:-none} $ST_CF_PCA, target row ${ST_CF_PCR:-none} $ST_CF_PCN), this member's derived block $( [ "$ST_CF_PJC1" = "$ST_CF_PJC0" ] && echo 'stayed identical' || echo CHANGED ) over ${ST_CF_PJCN:-0} region row(s), where an identical, non-empty block is owed"
 fi
 
 # ── CTL-ST-CF-PIN-FLIP — MUST FIRE on the pin. On a COPY of the charter, the first interviewer-class
