@@ -7,14 +7,14 @@ spoken: no
 route: card
 style: none
 traveller: TE — terse, an invented traveller
-answered-before: Where you stay › Rooming
+answered-before: rooming
 T1 I | Rooming is already in your file; is that still right?
-L4 put=Where you stay › Rooming kind=ask example=no
+L4 put=rooming kind=ask example=no
 T2 P | Mostly.
-L3 Where you stay › Rooming = thin
+L3 rooming = thin
 T3 I | You said mostly — anything to change?
-L4 put=Where you stay › Rooming kind=follow-up example=no carries=«mostly»
+L4 put=rooming kind=follow-up example=no carries=«mostly»
 T4 P | No, it stands.
-L3 Where you stay › Rooming = answer
+L3 rooming = answer
 --- record
-X FB-C Where you stay › Rooming = fail:2
+X FB-C rooming = fail:2

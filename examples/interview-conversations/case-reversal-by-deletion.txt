@@ -9,8 +9,8 @@ style: none
 traveller: AF — answers freely, an invented traveller
 answered-before: none
 T1 I | What kind of trip are you after?
-L4 put=Destination leanings › Trip vibe kind=ask example=no
+L4 put=trip-vibe kind=ask example=no
 T2 P | The beach, not the city.
-L3 Destination leanings › Trip vibe = answer
+L3 trip-vibe = answer
 --- record
-V Destination leanings › Trip vibe = the city
+V trip-vibe = the city

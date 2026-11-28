@@ -17,10 +17,10 @@ L4 put=- kind=style offer example=no
 T4 P | (silence)
 L3 - = silence
 T5 I | What kind of trip are you after?
-L4 put=Destination leanings › Trip vibe kind=ask example=no
+L4 put=trip-vibe kind=ask example=no
 T6 P | (silence)
-L3 Destination leanings › Trip vibe = silence
+L3 trip-vibe = silence
 T7 I | You can answer, skip it, or stop here.
-L4 put=Destination leanings › Trip vibe kind=silence re-offer example=no
+L4 put=trip-vibe kind=silence re-offer example=no
 T8 P | (silence)
-L3 Destination leanings › Trip vibe = silence
+L3 trip-vibe = silence

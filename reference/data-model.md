@@ -494,6 +494,8 @@ A **field** is a distinct `(section, label)` pair rendered as a body bullet of t
 
 A reword changes a field's `Field` cell and leaves its key. Answers written before the reword still carry the old label: a profile already written, and a form sent out before the reword and returned after it. **Such an answer is read by its field's current label or by one of its former labels, and nothing rewrites it.** The declaration below holds each reworded field's former labels, one row per former label, and only for a field that has been reworded, so it grows with rewording and never with the field count.
 
+**A field answered under more than one of its spellings occurs more than once**, so a `slot` field answered in one file under its current label and a former label, or under more than one former label, is `MALFORMED-SLOT` under § *Determinism* **O3**, exactly as a label standing twice is.
+
 **Grammar.** A row is a key and a label the field was once rendered under, separated by a pipe and each trimmed; a pipe rather than whitespace, because a label may hold a comma or a space. A line whose first non-blank character is `#` is a comment, and a blank line is ignored. A row's section is the section of its key's row.
 
 **What a row may not be.** A former label never repeats its own field's current label, and **a former label is never reused for another field in its section** — neither as that field's current label nor as one of its former labels — so an old answer is read as exactly one field. Sections are compared as the denominator rule compares a section with a heading, so a section and its glossed extension are one section here. Group `FT` grades every row against the table.

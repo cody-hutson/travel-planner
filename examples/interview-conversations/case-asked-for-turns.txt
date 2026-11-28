@@ -9,25 +9,25 @@ style: none
 traveller: TE — terse, an invented traveller
 answered-before: none
 T1 I | What kind of trip are you after?
-L4 put=Destination leanings › Trip vibe kind=ask example=no
+L4 put=trip-vibe kind=ask example=no
 T2 P | What do you mean by that?
-L3 Destination leanings › Trip vibe = request-clarify
+L3 trip-vibe = request-clarify
 T3 I | The sort of trip it is — by the sea, in a city, out in nature.
-L4 put=Destination leanings › Trip vibe kind=asked-for example=no
+L4 put=trip-vibe kind=asked-for example=no
 T4 P | Oh. A city.
-L3 Destination leanings › Trip vibe = thin
+L3 trip-vibe = thin
 T5 I | You said a city — which kind?
-L4 put=Destination leanings › Trip vibe kind=follow-up example=no carries=«city»
+L4 put=trip-vibe kind=follow-up example=no carries=«city»
 T6 P | One I can walk.
-L3 Destination leanings › Trip vibe = answer
+L3 trip-vibe = answer
 T7 I | Is anyone travelling with you who won't fill in their own form?
-L4 put=About you › Party kind=ask example=no
+L4 put=party kind=ask example=no
 T8 P | Sorry, can you say that again?
-L3 About you › Party = request-repeat
+L3 party = request-repeat
 T9 I | Is anyone travelling with you who won't fill in their own form?
-L4 put=About you › Party kind=asked-for example=no
+L4 put=party kind=asked-for example=no
 T10 P | My dad.
-L3 About you › Party = answer
+L3 party = answer
 --- record
-V Destination leanings › Trip vibe = a city, one I can walk
-V About you › Party = my dad
+V trip-vibe = a city, one I can walk
+V party = my dad
