@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-11-27 — A label edit touches only the label
+## [0.80.0] — 2026-11-27 — A label edit touches only the label
 
 Rewording a question on either guided intake form now touches the label's two statements, its bullet on
 the form and its row in the classification table, and one former-label row. Beyond those, a reword owes
