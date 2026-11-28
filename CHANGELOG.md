@@ -3,6 +3,50 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [Unreleased] — 2026-11-26 — Every edit a reader can see counts as a change to the plan, and the gate says when the reading changed
+
+**Some trips are asked to confirm their plan once more, and the gate now says why.** The check that
+tells a changed plan from the published one now reads a page as a browser does where it did not before,
+so an edit made only there counts as a change to the plan:
+
+- text after a stray `<`, as in `arrive < 18:30`;
+- text after a tag that only looks like a script or style one, such as a custom element named
+  `<script-card>`, or a `<script>` written inside a comment, an attribute or a text box;
+- the text a browser shows from an attribute (an input's value or placeholder, an option's label, an
+  image's alt text), and markup written inside a text box or a title, which a browser shows as text.
+
+A trip whose site carries any of these reads as changed once, save after an edit that removes exactly the
+text one of them hid from the earlier version: that edit passes once, as the earlier version also let it
+pass. The published and staged push records and the confirmation record now note the version of this
+check they were taken under, so the gate can say which version it is comparing against; the approval
+ledger's form does not change.
+
+- **On a trip that declares no approvers,** `update` and `rotate` stop once. The message says that how
+  pages are read has changed, that the gate cannot tell whether the plan moved as well, and that one
+  `confirm` clears it. Check the plan, then confirm. There is nothing to revert.
+- **On a trip that declares approvers,** the plan's approval code changes, and approvals recorded for
+  the old code stop counting. The message asks the group to approve once more. `publish` says the same
+  when the site still states the old code.
+
+A trip whose site carries none of these is asked nothing, and its code does not change. A change to its
+plan is reported as a change, and the message asks for one `confirm`, or for the group's approval.
+Until a trip's first push under this version, that message names no revert, because the check cannot
+tell that reverting would restore the published plan. What the check still leaves out is named beside
+it: text a script or style draws, numbers a browser generates for a list, tooltips and the suggestions
+a field shows while you type in it, text meant only for assistive technology, a page embedded through
+`srcdoc`, and SVG or MathML, which are read by HTML's rules. Until a trip's next push, `list` shows
+`UNDETERMINED` rather than `BEHIND` for a trip whose site carries one of these, when its last push
+record was taken under the earlier version. Records this release writes remain readable if the release
+is reverted.
+
+**Size fence.** Read against `v0.80.0`, the previous release tag, `CH_EMIT=growth bash
+scripts/test-corpus-hygiene.sh` lists every row kept, none new, raised, lowered or dropped, and no file
+owing a row without one. `reference/adr/ADR-029-group-approval-return-and-threshold.md` grew 606 bytes
+to 59,801, beneath 64,173; `reference/adr/README.md` grew 61 to 28,377, beneath 31,148;
+`skills/trip/SKILL.md` grew 49 to 115,137, beneath 118,008; and `skills/trip-publish/SKILL.md` grew
+157 to 48,605, beneath 48,711. `reference/adr/ADR-052-a-body-ends-where-the-browser-ends-it.md`,
+amended in this release, grew 1,080 bytes to 13,290 and is below its class floor, so it owes no row.
+
 ## [0.80.0] — 2026-11-27 — A label edit touches only the label
 
 Rewording a question on either guided intake form now touches the label's two statements, its bullet on

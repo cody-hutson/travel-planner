@@ -658,11 +658,13 @@ a rebuild or a touch that changes nothing visible reads current; its verdicts ar
 family's, compared as `skills/trip/SKILL.md` § *The freshness report* compares them. A record staged by
 a push and not yet put in place, a record that cannot be read, no record on this machine, and a record
 written under the earlier digest that no longer matches each leave the verdict undetermined, naming what
-could not be read. It says nothing about whether the page is served: `unpublish` leaves the record, and the
-status column carries that. It cannot observe a push made from another machine; text outside the
+could not be read. A record written under another reading of the page that no longer matches leaves it
+undetermined only where the page reads differently under the two readings, and reads behind otherwise.
+It says nothing about whether the page is
+served: `unpublish` leaves the record, and the status column carries that. It cannot observe a push
+made from another machine; text outside the
 projection — the coordination band and the declaration block, by design, and text a browser shows that
-the projection drops; or a projection that moved after the record was written, which reads as a change
-once.
+the digest still drops, as the comment above `strip_to_itinerary_text` states.
 
 ### Never assert a publication state that was not observed
 

@@ -629,7 +629,8 @@ Stated rather than smoothed over:
 - the `updated` band decays after seven days, taking the count off the site;
 - a withdrawal recorded after publication un-publishes nothing;
 - the `*)` abort message keeps its *"no organizer confirmation covers it"* wording under a
-  declaration;
+  declaration wherever every record the state was decided from names the engine's reading;
+  `_reading_measured` states where it does not;
 - a revert of #719's build after baselines have re-anchored to SHA-256 reads each such plan as
   moved until it is confirmed — fail-closed, in the direction the shim does not cover.
 
@@ -703,3 +704,9 @@ abandoned before any approval leaves, and this record takes no decision on that 
 now says what this decision adds to such a trip, which is nothing, and names where `confirm`'s
 behaviour there is stated. Decision 3's step table, its privilege split and the declared path's
 exit stand as decided.
+
+**Amendment (2026-11-26, Thursday) — § *Residuals*: the `*)` wording residual narrowed to records
+taken under the engine's reading; no decision changes.** It read as true of every declared trip:
+the `*)` abort message keeps its *"no organizer confirmation covers it"* wording under a
+declaration. Since the reading version, a declared trip whose records name an earlier reading is
+told that the reading changed instead; `_reading_measured` and the arms S33d–S33f state where.

@@ -135,22 +135,13 @@ the enum at four values; the rest of that decision stands.
   the guard's arms counts six, and the comments above the visible and joined projections name the
   reading that now ends a body where the browser does.
 - The itinerary digest's projection reads the same end tag, and the suite holds the two to one rule.
-  Four classes of text a reader can see are known to stay outside that digest, named here so the
-  rule is not read as the whole answer — the list is what has been found, not a proof that nothing
-  else does: **(a)** text after an opening tag that only looks like a script or style one, the
-  class above; **(b)** text after a stray `<` in the page's text, which the digest's tag strip
-  reads as a tag's start, dropping everything up to the next `>`; **(c)** text a script or style
-  draws — a map pop-up, a CSS `content:` label — which the digest does not read, by design; and
-  **(d)** text a browser shows from an attribute — an `<input>` or button `value`, a
-  `placeholder`, an `<option>` `label`, an `<img>` `alt` — and the body of a closed `<script>`
-  written inside a text box such as `<textarea>`, which a browser shows as the box's text. One
-  follow-up card owns (a), (b) and (d), the digest dropping text a browser shows; (c) stays out by
-  design. How many renders carry (a), (b) or (d) is unmeasured: the repository tracks no render.
-- A render with an end tag of another form reads as changed once under that digest, and the gate's
-  `unconfirmed` message then says its itinerary content differs from the published plan, when what
-  moved is the reading. The remedy is one `confirm`, which the release's changelog entry states.
-  A follow-up card designs a reading-version field written beside each record's digest, so the gate
-  can say that the reading changed; no old digest is ever accepted in its place.
+  The text a reader can see that still stays outside that digest is stated in the comment above
+  `strip_to_itinerary_text` in `scripts/publish-trip-site.sh`, and group S, arms S34a–S34c, pins what
+  the digest now reads and what it leaves out.
+- A render with an end tag of another form reads as changed once under that digest, and the remedy
+  is one `confirm`, which the release's changelog entry states. The reading each record's digest was
+  taken under is stated at `_ITINERARY_READING` in `scripts/publish-trip-site.sh`, and group S, arms
+  S33a–S33j, grades it; no old digest is ever accepted in its place.
 
 ## References
 
@@ -165,3 +156,26 @@ the enum at four values; the rest of that decision stands.
   `strip_to_joined_text_at_browser_end` and `verify_publishable_content` in
   `scripts/publish-trip-site.sh`. Regression coverage: `scripts/test-publish-guard.sh` group M,
   arms M9a–M9e, and group S, arm S32d, for the end-tag rule the digest shares.
+
+## Amendment history
+
+**Amendment (2026-11-26, Thursday) — § *Consequences*, *What this decision makes false or necessary
+elsewhere*: the itinerary digest's list of what it leaves out, and its reading-version sentence, each
+replaced by one sentence naming where that is now stated; no decision changes.** This record decides
+nothing about the itinerary digest, as its opening says, and two of its consequence bullets described
+that digest in a state it no longer has. The first listed four classes of text a reader can see as
+known to stay outside it and named a follow-up card for three of them: *"Four classes of text a reader
+can see are known to stay outside that digest, named here so the rule is not read as the whole answer
+— the list is what has been found, not a proof that nothing else does: (a) text after an opening tag
+that only looks like a script or style one, the class above; (b) text after a stray `<` in the page's
+text …; (c) text a script or style draws …; and (d) text a browser shows from an attribute … One
+follow-up card owns (a), (b) and (d), the digest dropping text a browser shows; (c) stays out by
+design. How many renders carry (a), (b) or (d) is unmeasured: the repository tracks no render."* The
+digest now reads (a), (b) and (d), so the list gives way to a sentence naming the comment that states
+what still stays out and the arms that pin it. The second said that on such a render *"the gate's
+`unconfirmed` message then says its itinerary content differs from the published plan, when what moved
+is the reading"*, and that *"A follow-up card designs a reading-version field written beside each
+record's digest, so the gate can say that the reading changed; no old digest is ever accepted in its
+place."* That field now stands beside each record's digest and the message names the reading change, so
+the two sentences give way to one naming where the reading is stated and the arms that grade it, and
+the clause that no old digest is accepted stays.
