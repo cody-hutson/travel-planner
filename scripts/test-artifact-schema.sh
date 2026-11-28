@@ -471,8 +471,8 @@
 #        for its number (TW1); the template declares each derived line's inputs as § 3 states or
 #        derives them, the times each line shows, and the clauses that say how it reads them (TW2);
 #        and the write-ownership row, `fact`'s route and every citation beside the recompute name
-#        that rule (TW3). Text only, never behaviour. Each arm guards its population and has
-#        must-fire controls on a copy
+#        that rule (TW3); and the surfaces the row change reconciled still say so (TW4). Text only,
+#        never behaviour. Each arm guards its population and has must-fire controls on a copy
 #   RS   the two rosters that DESCRIBE this suite — the coverage boundary in
 #        .github/workflows/artifact-schema.yml and THIS BLOCK — each set-diffed BOTH WAYS
 #        against the groups the run actually emitted. The executing set is taken from the RUN
@@ -35806,8 +35806,9 @@ fi
 #
 # `ADR-028` gives `### Effective Planning Days` a writer, `/trip-record`, which recomputes a line in
 # the act that records one of that line's declared inputs (Decision 1), under a standing rule
-# landed verbatim from the record's § 7, from inputs the template declares per line (§ 3). Three
-# arms grade the TEXT of that landing. Each reads its oracle live and holds no copy of it:
+# landed verbatim from the record's § 7, from inputs the template declares per line (§ 3). Four
+# arms grade the TEXT of that landing and of what it reconciled. Each reads its oracle live and holds
+# no copy of it:
 #   TW1  the standing clause carries § 7's rule exactly once, verbatim but for its number, as rule
 #        2's fourth admitted shape, in a numbering that runs without a gap;
 #   TW2  the template's trip-window note declares each derived line's inputs by label, each line's
@@ -35821,7 +35822,11 @@ fi
 #        `[DERIVED]` route row names that rule; its cross-block table names no trip-window
 #        consequence; its `**Reads:**` line names the block and the template; and every citation of
 #        a standing rule that shares a sentence with the recompute, in `fact` and in the conduct
-#        file's block-owned section, names that number, at no fewer sites than each file carries.
+#        file's block-owned section, names that number, at no fewer sites than each file carries;
+#   TW4  the surfaces the row change reconciled still say so: no tracked markdown outside the records
+#        and the specimens carries the departure line's retired hotel clause, scheduling's `## Input`
+#        item 3 ends the departure day at transport's `Recommended hotel departure:`, and
+#        `/trip-new`'s ground gives the `[DERIVED]` block to `/trip-record`.
 # Every limb asserts its population first, so a relocated surface reads FAIL and never a vacuous
 # PASS. Every arm has must-fire controls on a COPY.
 #
@@ -36254,6 +36259,103 @@ tw3_ctl CTL-TW3-FLOOR-FACT "$TW_CH" "$TW3_C" cite "the replacement write shape's
 TW3_C="$TW_WORK/tw3-floor-conduct.md"
 tw_swap "$TW_IC" "$TW3_C" "as standing rule $TW_N's own write" "as its own write"
 tw3_ctl CTL-TW3-FLOOR-CONDUCT "$TW_CH" "$TW_SK" cite "the conduct sentence's second citation of standing rule $TW_N deleted" "$TW3_C"
+
+
+# ── TW4 — the surfaces the row change reconciled still say so. ──
+# The population is every tracked markdown file outside the records (`reference/adr/`, `CHANGELOG.md`)
+# and the specimens (`examples/`, whose window lines keep their hand-written text by design).
+# WHAT THIS ARM DOES NOT ESTABLISH. It does not sweep that population for a claim that the `[DERIVED]`
+# block has no writer, though that is the claim the row change made false: one such claim still stands
+# in § erase's reach table of `skills/trip-record/SKILL.md`, which this arm's change does not edit, so
+# such a sweep would be red on it rather than guard anything, and `/trip-new`'s ground is graded alone.
+# Nor does it grade `CLAUDE.md` Step 1's default-paragraph sentence.
+# tw4_report <scheduling> <trip-new> <swap-path> <swap-copy> — tab-separated records, the population
+# read with <swap-path>, where it is a member, replaced by <swap-copy>:
+#   POP <files>                   population files read
+#   HOTEL <file> <n>              a member whose text, whitespace-joined, carries the departure line's
+#                                 retired hotel clause, `must depart hotel by`
+#   SCHED <inputs> <item 3s> <n>  scheduling's `## Input` sections, the item 3s in them, and how often
+#                                 those name `Recommended hotel departure:`
+#   NEW <phrases> <named>         `/trip-new`'s phrases giving the `[DERIVED]` block a writer, and how many
+#                                 of them name `/trip-record`
+tw4_report() {
+  local f p=()
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    if [ "$f" = "$3" ]; then p+=("$4"); else p+=("$ROOT/$f"); fi
+  done <<<"$TW4_PL"
+  if [ "${#p[@]}" -gt 0 ]; then
+    LC_ALL=C awk -v hc='must depart hotel by' -v rp="$ROOT/" -v sp="$4" -v sr="$3" '
+      function cnt(s, t,   n, q) { n = 0; while ((q = index(s, t)) > 0) { n++; s = substr(s, q + length(t)) }; return n }
+      function emit(   s, k, nm) { s = tx; gsub(/[ \t]+/, " ", s); k = cnt(s, hc); nm = cur; if (nm == sp) nm = sr " (its copy)"; else if (index(nm, rp) == 1) nm = substr(nm, length(rp) + 1); if (k > 0) printf "HOTEL\t%s\t%d\n", nm, k }
+      FNR == 1 { if (cur != "") emit(); cur = FILENAME; tx = ""; nf++ }
+      { tx = tx " " $0 }
+      END { if (cur != "") emit(); printf "POP\t%d\n", nf + 0 }' "${p[@]}"
+  else
+    printf 'POP\t0\n'
+  fi
+  LC_ALL=C awk 'BEGIN { bt = sprintf("%c", 96); rh = bt "Recommended hotel departure:" bt }
+    function cnt(s, t,   n, q) { n = 0; while ((q = index(s, t)) > 0) { n++; s = substr(s, q + length(t)) }; return n }
+    /^## / { inp = ($0 == "## Input"); if (inp) ni++; it = 0; next }
+    inp && /^[0-9]+\. / { it = (index($0, "3. ") == 1); if (it) n3++ }
+    inp && it { t3 = t3 " " $0 }
+    END { gsub(/[ \t]+/, " ", t3); printf "SCHED\t%d\t%d\t%d\n", ni + 0, n3 + 0, cnt(t3, rh) }' "$1"
+  LC_ALL=C awk 'BEGIN { bt = sprintf("%c", 96); g = "the " bt "[DERIVED]" bt " block to "; w = g bt "/trip-record" bt }
+    function cnt(s, t,   n, q) { n = 0; while ((q = index(s, t)) > 0) { n++; s = substr(s, q + length(t)) }; return n }
+    { tx = tx " " $0 }
+    END { gsub(/[ \t]+/, " ", tx); printf "NEW\t%d\t%d\n", cnt(tx, g), cnt(tx, w) }' "$2"
+}
+# tw4_verdict <report> — `ok`, or the first limb that failed.
+tw4_verdict() {
+  LC_ALL=C awk -F'\t' '
+    $1 == "POP" { pop = $2 } $1 == "HOTEL" { hot = hot " " $2 " (" $3 ")" }
+    $1 == "SCHED" { si = $2; s3 = $3; sn = $4 } $1 == "NEW" { no = $2; nn = $3 }
+    END {
+      if (pop < 1) { print "population — the sweep read " pop + 0 " tracked markdown file(s) outside the records and the specimens, where at least one is owed"; exit }
+      if (hot != "") { print "hotel —" hot " carry the retired departure-line hotel clause, where the departure day now ends at transport'"'"'s Recommended hotel departure: (D-9)"; exit }
+      if (si != 1 || s3 != 1) { print "sched — agents/03-scheduling.md carries " si + 0 " ## Input section(s) and " s3 + 0 " item 3(s) in it, where one each is owed"; exit }
+      if (sn < 1) { print "sched — agents/03-scheduling.md ## Input item 3 names Recommended hotel departure: 0 time(s), so the departure day has no stated end (D-9)"; exit }
+      if (no < 1) { print "trip-new — skills/trip-new/SKILL.md gives the [DERIVED] block a writer in 0 phrase(s), where its ground names one"; exit }
+      if (nn != no) { print "trip-new — " no " phrase(s) of skills/trip-new/SKILL.md give the [DERIVED] block a writer and " nn + 0 " of them name /trip-record, the writer § Write ownership names"; exit }
+      print "ok"
+    }' <<<"$1"
+}
+
+TW4_ALL="$(cd "$ROOT" && git ls-files -- '*.md' 2>/dev/null)"
+TW4_PL="$(LC_ALL=C awk 'index($0, "reference/adr/") != 1 && $0 != "CHANGELOG.md" && index($0, "examples/") != 1' <<<"$TW4_ALL")"
+TW4_SC="$ROOT/agents/03-scheduling.md"; TW4_TN="$ROOT/skills/trip-new/SKILL.md"
+TW4_R="$(tw4_report "$TW4_SC" "$TW4_TN" - -)"
+TW4_V="$(tw4_verdict "$TW4_R")"
+TW4_NP="$(LC_ALL=C awk -F'\t' '$1 == "POP" { print $2 + 0 }' <<<"$TW4_R")"
+if [ "$TW4_V" = ok ]; then
+  PASS "TW4: none of the $TW4_NP tracked markdown file(s) outside the records and the specimens carries the departure line's retired hotel clause; agents/03-scheduling.md § Input item 3 ends the departure day at transport's Recommended hotel departure:; and /trip-new's ground gives the [DERIVED] block to /trip-record, the writer § Write ownership names. A claim elsewhere that the block has no writer is not swept here, as this arm's comment says"
+else
+  FAIL "TW4: $TW4_V. The row change reconciled each of these surfaces in the same change, and one put back says what the template and the charter no longer say"
+fi
+
+# ── TW4's controls, each on a COPY of one file, the others real. ──
+# tw4_ctl <id> <scheduling> <trip-new> <swap-path> <swap-copy> <expected reason head> <what changed>
+tw4_ctl() {
+  local v dif=no
+  v="$(tw4_verdict "$(tw4_report "$2" "$3" "$4" "$5")")"
+  cmp -s "$TW4_SC" "$2" || dif=yes
+  cmp -s "$TW4_TN" "$3" || dif=yes
+  [ "$4" = - ] || cmp -s "$ROOT/$4" "$5" || dif=yes
+  if [ "$dif" = yes ] && [ "${v%% —*}" = "$6" ]; then
+    PASS "$1: MUST FIRE — $7 in a copy, and TW4 reads '$6': ${v#* — }"
+  else
+    FAIL "$1: MUST FIRE — $7 in a copy (copy differs: $dif); TW4 read '$v' where a '$6' finding is owed"
+  fi
+}
+TW4_C="$TW_WORK/tw4-hotel.md"
+tw_swap "$ROOT/reference/data-model.md" "$TW4_C" '*"Departure day — [departure time] flight; check-out [check-out time]."*' '*"Departure day — must depart hotel by [time] for [departure time] flight."*'
+tw4_ctl CTL-TW4-HOTEL "$TW4_SC" "$TW4_TN" reference/data-model.md "$TW4_C" hotel "the data model's quotation of the departure line put back to its hotel clause"
+TW4_C="$TW_WORK/tw4-sched.md"
+tw_swap "$TW4_SC" "$TW4_C" $'   is present for all of it. **The departure day\'s usable window ends at the anchor\n   stream\'s `Recommended hotel departure:` in `outputs/transport-brief.md`**, and at\n   no time read from this block or from a leg\'s `Notes:`. Where the brief is absent\n   or carries no anchor departure stream, the absent-brief rule below holds: say so\n   on that day and give its window no end time' '   is present for all of it'
+tw4_ctl CTL-TW4-SCHED "$TW4_C" "$TW4_TN" - - sched "scheduling's ## Input item 3 put back to end at the baseline sentence"
+TW4_C="$TW_WORK/tw4-new.md"
+tw_swap "$TW4_TN" "$TW4_C" $'the `[DERIVED]` block to `/trip-record`,' $'the `[DERIVED]` block to no writer at all,'
+tw4_ctl CTL-TW4-NEW "$TW4_SC" "$TW4_C" - - trip-new "/trip-new's ground put back to give the [DERIVED] block no writer"
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RS — the group rosters that DESCRIBE this suite, asserted against the run.
