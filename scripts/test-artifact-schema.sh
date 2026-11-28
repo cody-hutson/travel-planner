@@ -35821,7 +35821,7 @@ fi
 #        `[DERIVED]` route row names that rule; its cross-block table names no trip-window
 #        consequence; its `**Reads:**` line names the block and the template; and every citation of
 #        a standing rule that shares a sentence with the recompute, in `fact` and in the conduct
-#        file's block-owned section, names that number.
+#        file's block-owned section, names that number, at no fewer sites than each file carries.
 # Every limb asserts its population first, so a relocated surface reads FAIL and never a vacuous
 # PASS. Every arm has must-fire controls on a COPY.
 #
@@ -36207,7 +36207,7 @@ tw3_verdict() {
       if (t[2] != 1 || t[3] < 1) { print "table — the cross-block heading stands " t[2] + 0 " time(s) over " t[3] + 0 " row(s), where once and at least one are owed"; exit }
       if (t[4] != 0) { print "table — " t[4] " cross-block row(s) still name `### Effective Planning Days`, a consequence the act now performs"; exit }
       if (d[2] != 1 || d[3] != 1 || d[4] != 1) { print "reads — " d[2] + 0 " **Reads:** line(s) in § fact, naming the block " d[3] + 0 " and the template " d[4] + 0 " time(s), where one, 1 and 1 are owed"; exit }
-      if (s[2] < 1 || s[3] < 1) { print "cite — " s[2] + 0 " citing site(s) in § fact and " s[3] + 0 " in the conduct section, where at least one each is owed"; exit }
+      if (s[2] < 4 || s[3] < 2) { print "cite — " s[2] + 0 " citing site(s) in § fact and " s[3] + 0 " in the conduct section, where at least 4 and 2 are owed: the **Reads:** line, the route row, step 3 and the replacement write shape in § fact, and both sentences of the conduct section"; exit }
       if (bad != "") { print "cite —" bad " where every site names rule " N; exit }
       print "ok"
     }' <<<"$1"
@@ -36217,19 +36217,20 @@ TW3_R="$(tw3_report "$TW_CH" "$TW_ADR" "$TW_SK" "$TW_IC" "$TW_N")"
 TW3_V="$(tw3_verdict "$TW3_R" "$TW_N")"
 TW3_NS="$(LC_ALL=C awk -F'\t' '$1 == "NSITE" { print $2 " in § fact and " $3 " in the conduct section" }' <<<"$TW3_R")"
 if [ "$TW3_V" = ok ]; then
-  PASS "TW3: § Write ownership carries ADR-028 § 1's row once, naming /trip-record under standing rule $TW_N; § fact's [DERIVED] route row names rule $TW_N and no longer says no writer exists; its cross-block table names no trip-window consequence; its **Reads:** line names the block and the template; and every citation of a standing rule beside the recompute — $TW3_NS — names rule $TW_N, the number TW1 found"
+  PASS "TW3: § Write ownership carries ADR-028 § 1's row once, naming /trip-record under standing rule $TW_N; § fact's [DERIVED] route row names rule $TW_N and no longer says no writer exists; its cross-block table names no trip-window consequence; its **Reads:** line names the block and the template; and every citation of a standing rule beside the recompute — $TW3_NS, no fewer than the 4 and 2 sites it stands at — names rule $TW_N, the number TW1 found"
 else
   FAIL "TW3: $TW3_V. ADR-028 § 1's row names the writer, and every surface that names the rule names it by the number it lands under"
 fi
 
 # ── TW3's controls, each on a COPY of one file, the others real. ──
-# tw3_ctl <id> <charter> <skill> <expected reason head> <what changed>
+# tw3_ctl <id> <charter> <skill> <expected reason head> <what changed> [<conduct>]
 tw3_ctl() {
-  local v dif=no
-  v="$(tw3_verdict "$(tw3_report "$2" "$TW_ADR" "$3" "$TW_IC" "$TW_N")" "$TW_N")"
+  local v dif=no ic="${6:-$TW_IC}"
+  v="$(tw3_verdict "$(tw3_report "$2" "$TW_ADR" "$3" "$ic" "$TW_N")" "$TW_N")"
   cmp -s "$TW_CH" "$2" || dif=yes
   cmp -s "$TW_SK" "$3" || dif=yes
-  if [ -s "$2" ] && [ -s "$3" ] && [ "$dif" = yes ] && [ "${v%% —*}" = "$4" ]; then
+  cmp -s "$TW_IC" "$ic" || dif=yes
+  if [ -s "$2" ] && [ -s "$3" ] && [ -s "$ic" ] && [ "$dif" = yes ] && [ "${v%% —*}" = "$4" ]; then
     PASS "$1: MUST FIRE — $5 in a copy, and TW3 reads '$4': ${v#* — }"
   else
     FAIL "$1: MUST FIRE — $5 in a copy; TW3 read '$v' where a '$4' finding is owed"
@@ -36245,6 +36246,14 @@ TW3_C="$TW_WORK/tw3-table.md"; LC_ALL=C awk 'index($0, "**Cross-block consequenc
 tw3_ctl CTL-TW3-TABLE "$TW_CH" "$TW3_C" table "the cross-block heading renamed"
 TW3_C="$TW_WORK/tw3-cite.md"; LC_ALL=C awk -v n="$TW_N" '!d && index($0, "standing rule " n "'"'"'s recompute of `### Effective Planning Days`, in the act") { sub("standing rule " n "'"'"'s", "standing rule " (n - 1) "'"'"'s"); d = 1 } { print }' "$TW_SK" > "$TW3_C"
 tw3_ctl CTL-TW3-CITE "$TW_CH" "$TW3_C" cite "step 3's citation of standing rule $TW_N set to $((TW_N - 1))"
+# CTL-TW3-FLOOR-FACT, CTL-TW3-FLOOR-CONDUCT — MUST FIRE: one citing site deleted from each file, so a
+# site that disappears is a FAIL and not a smaller population that still names the right number.
+TW3_C="$TW_WORK/tw3-floor-fact.md"
+tw_swap "$TW_SK" "$TW3_C" "  writing**, and change only that field's lines — where the field is a declared input of"$'\n'"  \`### Effective Planning Days\`, standing rule $TW_N's recompute of the lines it feeds is that rule's write." "  writing**, and change only that field's lines."
+tw3_ctl CTL-TW3-FLOOR-FACT "$TW_CH" "$TW3_C" cite "the replacement write shape's citation of standing rule $TW_N deleted"
+TW3_C="$TW_WORK/tw3-floor-conduct.md"
+tw_swap "$TW_IC" "$TW3_C" "as standing rule $TW_N's own write" "as its own write"
+tw3_ctl CTL-TW3-FLOOR-CONDUCT "$TW_CH" "$TW_SK" cite "the conduct sentence's second citation of standing rule $TW_N deleted" "$TW3_C"
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RS — the group rosters that DESCRIBE this suite, asserted against the run.
