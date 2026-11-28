@@ -36295,9 +36295,10 @@ tw3_ctl CTL-TW3-FLOOR-CONDUCT "$TW_CH" "$TW_SK" cite "the conduct sentence's sec
 # The population is every tracked markdown file outside the records (`reference/adr/`, `CHANGELOG.md`)
 # and the specimens (`examples/`, whose window lines keep their hand-written text by design).
 # WHAT THIS ARM DOES NOT ESTABLISH. It does not sweep that population for a claim that the `[DERIVED]`
-# block has no writer, though that is the claim the row change made false: one such claim still stands
-# in § erase's reach table of `skills/trip-record/SKILL.md`, which this arm's change does not edit, so
-# such a sweep would be red on it rather than guard anything, and `/trip-new`'s ground is graded alone.
+# block has no writer, though that is the claim the row change made false: no such claim about the
+# trip window stands today, but the sweep is not built yet, so `/trip-new`'s ground is graded alone. A
+# sweep must be scoped to the trip window, because a `[DERIVED]` block an earlier template left in a
+# trip truly has no writer, and erase's reach table says so.
 # Nor does it grade `CLAUDE.md` Step 1's default-paragraph sentence.
 # tw4_report <scheduling> <trip-new> <swap-path> <swap-copy> — tab-separated records, the population
 # read with <swap-path>, where it is a member, replaced by <swap-copy>:

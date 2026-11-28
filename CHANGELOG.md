@@ -34,7 +34,8 @@ the line takes its placeholder. A hand edit outside the command surface still le
 
 **Suite.** Group TW grades, as text, the rule, the declaration (its shape, offset and source clauses,
 and the inputs and times each line shows), the writer, every citation of the rule, file by file, and
-the surfaces the row change reconciled. `CTL-ST-CF-PIN-FLIP`'s picker, `CTL-ST-CF-CONDITION-CELL`'s
+three of the surfaces the row change reconciled: the retired hotel clause, scheduling's input item 3
+and `/trip-new`'s ground. No arm reads `CLAUDE.md` Step 1's default sentence or erase's row 34. `CTL-ST-CF-PIN-FLIP`'s picker, `CTL-ST-CF-CONDITION-CELL`'s
 target, `CTL-ST-CF-PROJ-FLIP`'s row and `CTL-ST-CF-Q4-INERT`'s placement change,
 `CTL-ST-CF-PROJ-CONDITION-CELL` plants its own no-writer row, and `CTL-ST-CF-Q4-EXCLUDED` now reads
 VACUOUS, its EXCLUDED limb armed by `CTL-ST-CF-ROW-FLIP`.
@@ -42,7 +43,7 @@ VACUOUS, its EXCLUDED limb armed by `CTL-ST-CF-ROW-FLIP`.
 **Size fence.** Read against `v0.80.0`, the previous release tag, `CH_EMIT=growth bash
 scripts/test-corpus-hygiene.sh` lists every row kept: none new, raised, lowered or dropped, and no
 file owes a row it lacks. The files that grew stand beneath their rows: `skills/trip-record/SKILL.md`
-grew 3,086 to 469,908, beneath 470,268; `CLAUDE.md` 478 to 89,456, beneath 97,553; and
+grew 3,128 to 469,950, beneath 470,268; `CLAUDE.md` 478 to 89,456, beneath 97,553; and
 `agents/03-scheduling.md` 356 to 36,619, beneath 39,526. `reference/data-model.md` shrank 4 to
 236,430 and `skills/trip-new/SKILL.md` 2 to 38,429. No ceiling was raised.
 

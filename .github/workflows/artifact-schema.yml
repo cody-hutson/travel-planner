@@ -353,8 +353,8 @@ name: Artifact schema
 #        on a copy
 #   TW   the trip window's recompute: its standing rule verbatim from ADR-028 § 7 but for its number,
 #        the template's per-line input declaration, and the write-ownership row, `fact`'s route
-#        and every citation beside the recompute naming that rule, and the surfaces the row
-#        change reconciled; text only, never behaviour
+#        and every citation beside the recompute naming that rule, and three of the surfaces
+#        the row change reconciled; text only, never behaviour
 #   RS   this coverage boundary itself, and the suite's own header roster, each set-diffed
 #        BOTH WAYS against the groups the run actually emitted. The executing set comes from
 #        the RUN, never from a static read of the suite. A group added and left undeclared
