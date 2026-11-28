@@ -10245,6 +10245,13 @@ fi
 # Writer cell names no writer. The block derived over that copy changes and that row's regions read
 # EXCLUDED (no-writer) in it; the region derived over the real charter FAILs against the copy, so a
 # writer-table edit is a red until the block is regenerated; and the regenerated region passes.
+# Since the trip window's row names /trip-record, that row is the first addressed YES row: row 4, the
+# trip window, where it was row 5, `## Destination`, with this body unchanged by the move. The trip
+# window's regions are `[DERIVED]`-marked, so this control's EXCLUDED limb holds only because a row
+# naming no writer outranks the mark, and it is one of the two arms that pin that precedence, with
+# CTL-ST-CF-PROJ-CONDITION-CELL's plant on the same row. A picker moved back to an unmarked row leaves
+# that plant to pin it alone. The row it flips is marked, not interviewable; CTL-ST-CF-ROW-FLIP flips
+# an interviewable row, and grades Q4 rather than the projection.
 ST_CF_PJ_RG="$(ft_regions "$ROOT/$ST_CF_MD_V2" "$ST_CF_OWN" 2>/dev/null)"
 ST_CF_PJ_FR="$(awk -F'\t' '$1 == "ROW" && $4 == "YES" && $5 == "addressed" { print $2; exit }' <<<"$ST_CF_PJ_RG")"
 ST_CF_PJ_FL="$(awk -F'\t' -v r="$ST_CF_PJ_FR" '$1 == "ROW" && $2 == r { print $6; exit }' <<<"$ST_CF_PJ_RG")"
