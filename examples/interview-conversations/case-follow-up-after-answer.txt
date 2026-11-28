@@ -9,13 +9,13 @@ style: none
 traveller: AF — answers freely, an invented traveller
 answered-before: none
 T1 I | Where would you arrive from, and when?
-L4 put=Getting there & back › Arrive / leave kind=ask example=no
+L4 put=arrive-leave kind=ask example=no
 T2 P | A day before everyone, and I'll leave with the group.
-L3 Getting there & back › Arrive / leave = answer
+L3 arrive-leave = answer
 T3 I | You said a day before everyone — anything more?
-L4 put=Getting there & back › Arrive / leave kind=follow-up example=no carries=«a day before everyone»
+L4 put=arrive-leave kind=follow-up example=no carries=«a day before everyone»
 T4 P | No.
-L3 Getting there & back › Arrive / leave = answer
+L3 arrive-leave = answer
 --- record
-V Getting there & back › Arrive / leave = a day before everyone, and I'll leave with the group
-X FB-C Getting there & back › Arrive / leave = fail:6
+V arrive-leave = a day before everyone, and I'll leave with the group
+X FB-C arrive-leave = fail:6

@@ -842,7 +842,16 @@ only the verbs that existed when it was written.
     re-key or rewrite such an entry, or the row it projects, on the ground that an erasure could
     reach it.
 
-20. **Recomputing a `[DERIVED]` block's lines in the act that records one of their declared inputs
+20. **A field of a written profile is read under its current label or under one of its former
+    labels, and no label is rewritten.** A traveller file or a person record written before a field
+    was reworded still carries the label it was written under, and `reference/data-model.md` § *Former labels* declares each reworded field's former labels and is where that reading is decided. A verb
+    that reads a profile's field by its label reads it under any of those spellings, and a `slot`
+    field answered under more than one of its spellings occurs more than once, so it is
+    `MALFORMED-SLOT` exactly as a label standing twice is. A verb that writes a value into a line
+    that exists keeps that line's label as written; a line it creates takes the field's current
+    label. **It binds every verb, present and future,** because every verb that reads a written
+    profile meets one written before a reword, and no verb's own section need restate it.
+21. **Recomputing a `[DERIVED]` block's lines in the act that records one of their declared inputs
     is rule 2's fourth admitted shape, and it is stated as a widening of rule 2; rule 7, the earlier
     widening of rule 2, is left exactly as it stands.** Where a verb writes a value the template
     declares as an input of a `[DERIVED]` block that `CLAUDE.md` § *Write ownership* assigns to this
@@ -1896,7 +1905,7 @@ before it (§ *Removing a row*).
 
 ## fact <statement>
 
-**Reads:** `trips/<slug>/trip-context.md` — the one block the statement routes to, read before it is written because standing rule 4 tests a placeholder by value and so separates a fill from a replacement, because an outgoing value is echoed verbatim before it is replaced, and because a new repeat unit is appended under the units already in that block without renumbering or rewriting them. Where the statement records a declared input of `### Effective Planning Days`, it also reads, for the echo and the derivation standing rule 20 names, that block, the blocks holding its inputs — the anchor `### Outbound` and `### Return` legs and `## Accommodation` — and `templates/trip-context.template.md` § *Effective Planning Days [DERIVED]*, resolved against the engine root, because that rule recomputes the lines the input feeds and echoes each line it replaces. Reads no other block of that file. Reads `outputs/event-status.md` not at all — that file is `/trip-record event`'s, and reading it here would give `## Locked Elements` a second source it does not write. Dispatches no agent. **Non-interactive: the standing clause's *run nobody can answer*.**
+**Reads:** `trips/<slug>/trip-context.md` — the one block the statement routes to, read before it is written because standing rule 4 tests a placeholder by value and so separates a fill from a replacement, because an outgoing value is echoed verbatim before it is replaced, and because a new repeat unit is appended under the units already in that block without renumbering or rewriting them. Where the statement records a declared input of `### Effective Planning Days`, it also reads, for the echo and the derivation standing rule 21 names, that block, the blocks holding its inputs — the anchor `### Outbound` and `### Return` legs and `## Accommodation` — and `templates/trip-context.template.md` § *Effective Planning Days [DERIVED]*, resolved against the engine root, because that rule recomputes the lines the input feeds and echoes each line it replaces. Reads no other block of that file. Reads `outputs/event-status.md` not at all — that file is `/trip-record event`'s, and reading it here would give `## Locked Elements` a second source it does not write. Dispatches no agent. **Non-interactive: the standing clause's *run nobody can answer*.**
 
 **The default-row verb.** § *Write ownership*'s default row assigns every untagged field not named
 on another row to this command; inside this command those fields are this verb's, except the ones
@@ -1922,7 +1931,7 @@ verb's.
 | Block class | Route |
 |---|---|
 | `[ENRICH]`-tagged | the enrichment agent's (`agents/00-enrichment.md`). Name it and write nothing — this verb writes no `[ENRICH]` field |
-| `[DERIVED]` | **this verb's under standing rule 20 alone, never as a route.** A statement about the block's own values is recorded as the input it derives from, and the lines that input feeds are recomputed in the same act, each echoed outgoing then incoming |
+| `[DERIVED]` | **this verb's under standing rule 21 alone, never as a route.** A statement about the block's own values is recorded as the input it derives from, and the lines that input feeds are recomputed in the same act, each echoed outgoing then incoming |
 | `**Lifecycle:**` | `/trip-decommission`'s — name it and stop. An absent line is the contract's declared default rather than a gap to fill. This verb never writes it |
 | `## Destination`, `## Mode` and `## Group` | a sibling verb of this same command — name it and stop |
 | `## Locked Elements`, `## Current Itinerary Status`, and every other untagged field | **this verb writes it** |
@@ -1938,7 +1947,7 @@ than one: ask once, naming them.** **None: say that no block of `trip-context.md
 statement, name none, and stop** — the ask has no candidates to offer, and this verb may not create
 the block that would be the answer, so the refusal *is* the terminal disposition rather than a
 question with nothing in it. This verb never collapses the two. **Never write to more than one
-block** to be safe; standing rule 20's recompute of `### Effective Planning Days`, in the act that
+block** to be safe; standing rule 21's recompute of `### Effective Planning Days`, in the act that
 records one of its inputs, is that rule's write and not a second route. And **never create a new `##`
 block** — § *Write ownership* assigns a block it does not list to nobody, and requires that *a new
 block gets an owner in this table before it gets content*, so a command that created blocks would
@@ -1953,7 +1962,7 @@ block.
   form, not content. Write it.
 - **A value becoming a different value is a replacement.** **Echo the outgoing value verbatim before
   writing**, and change only that field's lines — where the field is a declared input of
-  `### Effective Planning Days`, standing rule 20's recompute of the lines it feeds is that rule's write.
+  `### Effective Planning Days`, standing rule 21's recompute of the lines it feeds is that rule's write.
 - **A new unit is appended**, which is the shape **standing rule 7** admits and the tool it names,
   under the block's own repeat unit — a `### [Constraint Name]` block
   under `## Hard Constraints`, a `#### Origin <letter>` block under `### Additional origins`, a row
@@ -2542,7 +2551,7 @@ what keep it there.
    rendering the values at all — not a cost this paragraph may claim is zero. That report goes on
    naming fields without their values, and nothing here changes what the enrichment agent writes
    into it. Standing rule 9(d) requires the echoed outgoing → incoming pair at exactly this surface,
-   and `## promote <name> <field-label>` echoes the same pair for one field at the moment of that one
+   and `## promote <name> <field>` echoes the same pair for one field at the moment of that one
    write. **The two rules govern different surfaces, and both hold as written.**
 
    **Rendering the values does not make this a solicitation, and rule 1 is what keeps it from
@@ -2564,7 +2573,7 @@ tempting move is the opposite one on each side.**
 > **This verb's reconciliation reads both records and writes neither, and it performs no resolution
 > of its own in either direction.** It takes no licence from standing rule 9, names no path under
 > `people/`, and has no branch that reaches one: every record-side resolution it surfaces is
-> executed by `## promote <name> <field-label>`, one field per invocation, as a separate act the
+> executed by `## promote <name> <field>`, one field per invocation, as a separate act the
 > operator types. **And it does not perform the trip-side removal either.** Where the record's
 > answer is the one to keep, the survey names the equivalence class — delete the line, blank it,
 > or write a single em dash — **and does not do it**, which is the posture `promote` already ships
@@ -2700,9 +2709,11 @@ travelers:**`. No byte under `people/`. No derived model. No file is created and
 `trips/<slug>/travelers/<traveler>.md` is the only path it touches, built from `trip.slug` exactly as
 `E1` spelled it and never from a `--trip` value, which this verb does not consume.
 
-## promote <name> <field-label>
+## promote <name> <field>
 
-**Reads:** `trips/<slug>/travelers/<file>.md` — the `person:` reference and the named field's outgoing value, read **before** the write because both are echoed; `people/<person-id>.md` — the record that reference resolves to: its H1, so the confirmation names the person, **and the named field's line alone**, read before it is written because the outgoing record value is echoed for the operator to confirm against. **No other field of the record is read.** Does not enumerate the store. Dispatches no agent, and takes no `Bash(date:*)` use — see the timestamp negative below. The write stands behind an echoed outgoing-to-incoming pair, which is what standing rule 9(d) requires of it and what the two reads above are taken before the write to supply.
+**Reads:** `trips/<slug>/travelers/<file>.md` — the `person:` reference and the named field's outgoing value, its line read under the field's current label or one of its former labels, **before** the write because both are echoed; `people/<person-id>.md` — the record that reference resolves to: its H1, so the confirmation names the person, **and the named field's line alone**, read under any of those spellings, before it is written because the outgoing record value is echoed for the operator to confirm against. **No other field of the record is read.** Does not enumerate the store. Dispatches no agent, and takes no `Bash(date:*)` use — see the timestamp negative below. The write stands behind an echoed outgoing-to-incoming pair, which is what standing rule 9(d) requires of it and what the two reads above are taken before the write to supply.
+
+**`<field>` names one field of the record's own form, by a field's key, its current label or one of its former labels.** A key is the `Key` cell of the field's row in `reference/data-model.md` § *Field Scope*, and a former label is a row of `reference/data-model.md` § *Former labels*. The token names every field of that form whose key, current label or former label it equals, compared case-sensitively and as written. **Exactly one such field is the field.** Where it names more than one, the token is refused, every field it names is named in the refusal, and none is picked: a precedence may choose between the spellings of one field, never between fields (`CLAUDE.md` § *Rules over an enumeration*). Where it names none, it is not a declared field of the record's own form. The argument is the operator's own words, so a former label is accepted wherever the current one is, and the lines read under either spelling are that field's lines, by standing rule 20.
 
 The promotion verb, and **the only verb of this command that writes outside `trips/<slug>/`.** It
 moves one value the operator already wrote in this trip into the durable record this trip
@@ -2731,7 +2742,10 @@ is the property that rule exists to deny.
 
 **What it writes.** Exactly **one body line** in `people/<person-id>.md`. The record's values are
 body fields, so this verb never touches its frontmatter fence, never `merged-into:`, never the title
-line, and never a field the record's own form does not declare.
+line, and never a field the record's own form does not declare. **The promoted value lands in the
+record's existing line for the field, under whatever spelling that line carries**: only its value
+changes and its label stays as written. Where the record holds no line for the field, the line is
+written under the field's current label. No label is rewritten, on either side.
 
 **Refusals, in evaluation order. Every one of them writes nothing.**
 
@@ -2740,8 +2754,10 @@ line, and never a field the record's own form does not declare.
 | the traveler file carries no `person:` | refuse; name `/trip-record link` |
 | the `person:` resolves to nothing | refuse; name `/trip-record unlink` as the repair path for a reference that resolves to nothing |
 | the reference resolves to a **merge stub** | refuse and **name the survivor**. Writing through a stub writes a record that is already dead, and resolving the stub first is what keeps redirect depth at one hop |
-| `<field-label>` is not a declared field of the record's own form | refuse, print the fields the form declares, and **offer no near-match**. § *When the token is not a verb of this command* is the shipped posture for this shape: a suggestion is a classification with a reflexive accept |
-| `<field-label>` is the display name or the title line | **refuse, always, with no branch.** The normalized title line is the store's own collision key, so changing it changes the record's identity. That is a **rename**, not a promotion, and a rename is not a verb of this command |
+| `<field>` is not a declared field of the record's own form | refuse, print the fields the form declares, and **offer no near-match**. § *When the token is not a verb of this command* is the shipped posture for this shape: a suggestion is a classification with a reflexive accept |
+| `<field>` names more than one field — by any pairing of a key, a current label and a former label | refuse, name every field it names, and **pick none**. A guess between fields would have the echo confirm a field the operator may not have meant |
+| `<field>` is the display name or the title line, by its key as by its label | **refuse, always, with no branch.** The normalized title line is the store's own collision key, so changing it changes the record's identity. That is a **rename**, not a promotion, and a rename is not a verb of this command |
+| the named field is `slot`-scoped and stands more than once across its spellings, in the trip file or in the record | refuse as `MALFORMED-SLOT`, name each line it stands on, and write nothing: a field answered under more than one of its spellings occurs more than once (`reference/data-model.md` § *Former labels*), and choosing a line would be first-wins or last-wins |
 | the trip-side value is not answered — absent, blank, a single em dash, or a surviving bracketed placeholder | refuse; there is nothing to promote. **`none` is an answer** and *is* promotable: the intake form makes it the one place `none` stands in for the em dash, and a promote that dropped it would turn a stated *"I have none"* into *"not asked yet"* in a durable, cross-trip record |
 | the trip-side value carries `[THIRD-PARTY]` | refuse. Today no such value can reach this verb, because that entry class has no file to bear a reference — the rule is written anyway, because that consequence holds only while the bearer set stays as it is, and because a durable cross-trip record for a person who never asked for one is the exact artifact `ADR-006` refused |
 | the run is non-interactive | refuse. The tier is MODERATE and the effect is durable and cross-trip; a confirmation nobody can give is not a confirmation |
@@ -3762,7 +3778,7 @@ A form declaring `1` is interviewable only where its block carries every key `re
 
 This section discharges each condition by name. **(a)** the path is named above — the minted `<store-root>/people/psn-<token>.md` on the create branch, and the operator's `<store-root>/people/<person-id>.md` on resume. **(b)** the create branch asks the operator, once and before anything is written, whether the person the record is for is here and answering for themselves — whatever the request says — and writes nothing short of yes (§ *When the person is not here*). **(c)** every value is taken under shared rules 7 and 8 of `skills/trip-record/interview-conduct.md`, or is the un-answer its shared rule 6 hears, and a relayed value is written under its W8, which reads from `reference/schemas/person-record.md` where the class admits the operator-provided mark. **(d)** its W5 and W6. **(e)** its W3 and W4. **(f)** its shared rule 11.
 
-**Who may write a record, and why this verb is inside that rule rather than beside it.** The class's own write rule is that no agent writes a value into a record, and that every value originates from the person or from the operator relaying that person's own statement. This verb is not an agent — `## promote <name> <field-label>` draws the same line for itself — and it authors nothing: every value it writes is the subject's own words, held there by the conduct file's shared rule 7 test and its shared rule 8 delete-only bound. **The create branch is the class's creation scaffold**, the member of its enumeration of permitted mechanical writes that `## extract <name>` also is, and it authors nothing either: it writes the form as it ships and the display name the operator gave for a person who is present. The answers written after it are outside that enumeration's subject matter, as `promote`'s write is: each records a person's answer at that person's direction. **The enumeration does not grow, and the class's schema is not edited.**
+**Who may write a record, and why this verb is inside that rule rather than beside it.** The class's own write rule is that no agent writes a value into a record, and that every value originates from the person or from the operator relaying that person's own statement. This verb is not an agent — `## promote <name> <field>` draws the same line for itself — and it authors nothing: every value it writes is the subject's own words, held there by the conduct file's shared rule 7 test and its shared rule 8 delete-only bound. **The create branch is the class's creation scaffold**, the member of its enumeration of permitted mechanical writes that `## extract <name>` also is, and it authors nothing either: it writes the form as it ships and the display name the operator gave for a person who is present. The answers written after it are outside that enumeration's subject matter, as `promote`'s write is: each records a person's answer at that person's direction. **The enumeration does not grow, and the class's schema is not edited.**
 
 **What consent this establishes, stated exactly and not overclaimed.** Condition (b) establishes that the subject is present, which is not the subject's consent to be recorded, and this section does not call it that. The bound is structural: a record is created only in a session its subject is answering, so the store's own exclusion — no record for a person who did not ask for one — holds by construction.
 

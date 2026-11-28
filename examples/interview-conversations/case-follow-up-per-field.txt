@@ -9,20 +9,20 @@ style: none
 traveller: TE — terse, an invented traveller
 answered-before: none
 T1 I | Where would you set out from, and what can you take on a travel day?
-L4 put=Getting there & back › Leaving from,Getting there & back › Journey comfort kind=ask example=no
+L4 put=leaving-from,journey-comfort kind=ask example=no
 T2 P | Leeds; trains.
-L3 Getting there & back › Leaving from = thin
-L3 Getting there & back › Journey comfort = thin
+L3 leaving-from = thin
+L3 journey-comfort = thin
 T3 I | You said Leeds and trains — anything more on either?
-L4 put=Getting there & back › Leaving from,Getting there & back › Journey comfort kind=follow-up example=no carries=«Leeds, trains»
+L4 put=leaving-from,journey-comfort kind=follow-up example=no carries=«Leeds, trains»
 T4 P | Leeds station; trains over planes.
-L3 Getting there & back › Leaving from = answer
-L3 Getting there & back › Journey comfort = thin
+L3 leaving-from = answer
+L3 journey-comfort = thin
 T5 I | You said trains — for how long?
-L4 put=Getting there & back › Journey comfort kind=follow-up example=no carries=«trains»
+L4 put=journey-comfort kind=follow-up example=no carries=«trains»
 T6 P | Up to four hours.
-L3 Getting there & back › Journey comfort = answer
+L3 journey-comfort = answer
 --- record
-V Getting there & back › Leaving from = Leeds, Leeds station
-V Getting there & back › Journey comfort = trains, trains over planes, up to four hours
-X FB-C Getting there & back › Journey comfort = fail:1
+V leaving-from = Leeds, Leeds station
+V journey-comfort = trains, trains over planes, up to four hours
+X FB-C journey-comfort = fail:1
