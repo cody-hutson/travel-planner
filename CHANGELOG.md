@@ -5,11 +5,14 @@ follows Keep a Changelog; versions follow Semantic Versioning.
 
 ## [Unreleased] — 2026-11-27 — A date change recomputes the trip's planning-day window
 
-Recording a change to a flight leg, or to the check-in or check-out time, now recomputes the trip's
-planning-day window in the same act. `/trip-record fact` rewrites only the lines of
-`### Effective Planning Days` whose inputs changed, shows each one as it was and as it becomes before
-it writes, and leaves a line whose other input it cannot read as it is, naming that input. The
-write-ownership table in `CLAUDE.md` now names `/trip-record` as the block's writer.
+Recording a change to a declared input of the trip's planning-day window — the anchor origin's last
+outbound arrival or first return departure, the zone of its first outbound departure, or the check-in
+or check-out time — now recomputes that window in the same act. `/trip-record fact` rewrites only the
+lines of `### Effective Planning Days` whose inputs changed, shows each one as it was and as it becomes
+before it writes, and leaves a line whose other input it cannot read as it is, naming that input. A
+changed leg stated in prose rather than in the shape the template declares cannot be read, so the
+lines it feeds take their placeholders. The write-ownership table in `CLAUDE.md` now names
+`/trip-record` as the block's writer.
 
 - The recompute is `/trip-record`'s standing rule 21, landed verbatim from `ADR-028` § 7 as rule
   2's fourth admitted shape. It binds every verb of the command that records an input of the block.
@@ -21,12 +24,13 @@ write-ownership table in `CLAUDE.md` now names `/trip-record` as the block's wri
   the trip-context form, `/trip-new`'s ground for writing no derived block, and Step 1's default in
   `CLAUDE.md` say the same.
 - A trip created before this release keeps its window lines until an input of a line changes, and
-  then only that line is rewritten.
+  then only the lines that input feeds are rewritten.
 
 **What is not observed, stated so.** The interview's route to the recompute is conduct only: no
 graded conversation runs on the trip-context form. The `Timezone delta` line is recomputed only where
-both zone annotations carry an explicit UTC offset, and a bare abbreviation is reported as not
-recomputable. A hand edit outside the command surface still leaves the window behind.
+both zone annotations carry an explicit UTC offset: where one the act did not change is a bare
+abbreviation, the line is reported as not recomputable, and where the changed one carries no offset,
+the line takes its placeholder. A hand edit outside the command surface still leaves the window behind.
 
 **Suite.** Group TW grades the rule, the declaration and the writer as text. `CTL-ST-CF-PIN-FLIP`'s
 picker, `CTL-ST-CF-CONDITION-CELL`'s target and `CTL-ST-CF-Q4-INERT`'s placement change, and
