@@ -35986,7 +35986,7 @@ tw2_verdict() {
     $1 == "ADR" { an[$2] = $3; al[$2] = $4 }
     END {
       if (h != 1 || nl < 1) { print "population — the heading `### Effective Planning Days [DERIVED]` stands " h + 0 " time(s) and the block holds " nl + 0 " derived line(s), where once and at least one are owed"; exit }
-      if (ne != nl) { print "bijection — " nl " derived line(s) and " ne " entry(ies)"; exit }
+      if (ne != nl) { print "bijection — " nl " derived line(s) and " ne + 0 " entry(ies)"; exit }
       for (k in ln) if (ln[k] != 1 || en[k] != 1) { print "bijection — `" k "` has " ln[k] + 0 " derived line(s) and " en[k] + 0 " entry(ies), where one each is owed"; exit }
       for (k in en) if (!(k in ln)) { print "bijection — entry `" k "` names no derived line"; exit }
       if (bare != "") { print "inputs — entry(ies)" bare " name no backticked input label"; exit }
